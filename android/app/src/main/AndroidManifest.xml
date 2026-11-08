@@ -6,6 +6,7 @@
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
+        android:icon="@drawable/ic_prototype"
         android:label="Expense Tracker Prototype"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"

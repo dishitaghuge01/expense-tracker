@@ -9,7 +9,7 @@ Application ID: `dev.expensetracker.prototype`. Not a production identity. Websi
 - Refresh grant state after returning from Android settings.
 - No SMS queries, receivers, notification listener, capture, network access, storage, activation or sharing.
 
-The status “Not granted” intentionally does not guess whether Android/installer restrictions or user denial caused it. “Blocked” reflects Android fixed-denial flags. Grant success is not evidence of real-alert capture.
+The status “Not granted” intentionally does not guess whether Android/installer restrictions or user denial caused it. After a completed request, lack of an Android rationale produces a settings/restriction hint, not a definitive diagnosis of installer restrictions. Grant success is not evidence of real-alert capture.
 
 ## Build
 

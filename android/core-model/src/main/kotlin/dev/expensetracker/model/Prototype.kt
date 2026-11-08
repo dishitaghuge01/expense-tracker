@@ -5,7 +5,7 @@ enum class ProbePermissionState(val label: String) {
     NOT_CHECKED("Not checked — permission probe not started"),
     GRANTED("Granted — capture remains disabled"),
     NOT_GRANTED("Not granted — denied, restricted or unavailable"),
-    BLOCKED("Blocked — change may require Android settings"),
+    BLOCKED("Not granted — Android may require settings or restrict this grant"),
 }
 
 object SyntheticDemo {

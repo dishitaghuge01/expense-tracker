@@ -6,6 +6,7 @@ plugins {
 android {
     namespace = "dev.expensetracker.prototype"
     compileSdk = 36
+    buildToolsVersion = "36.0.0"
     defaultConfig {
         applicationId = "dev.expensetracker.prototype"
         minSdk = 29

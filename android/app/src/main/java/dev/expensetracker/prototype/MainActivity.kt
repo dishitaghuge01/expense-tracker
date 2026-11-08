@@ -41,6 +41,7 @@ import java.util.Locale
 class MainActivity : ComponentActivity() {
     private val permissions = listOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS)
     private var permissionStates by mutableStateOf<List<ProbePermissionState>>(emptyList())
+    private var completedRequests = emptySet<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,11 +58,9 @@ class MainActivity : ComponentActivity() {
 
     private fun refreshPermissionStates() {
         permissionStates = permissions.map { permission ->
-            val flags = packageManager.getPermissionFlags(permission, packageName, android.os.Process.myUserHandle())
             when {
                 checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED -> ProbePermissionState.GRANTED
-                flags and (PackageManager.FLAG_PERMISSION_USER_FIXED or
-                    PackageManager.FLAG_PERMISSION_POLICY_FIXED or PackageManager.FLAG_PERMISSION_SYSTEM_FIXED) != 0 ->
+                permission in completedRequests && !shouldShowRequestPermissionRationale(permission) ->
                     ProbePermissionState.BLOCKED
                 else -> ProbePermissionState.NOT_GRANTED
             }
@@ -74,7 +73,10 @@ class MainActivity : ComponentActivity() {
         var consent by rememberSaveable { mutableStateOf(false) }
         val permissionLauncher = rememberLauncherForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions(),
-        ) { refreshPermissionStates() }
+        ) {
+            completedRequests = permissions.toSet()
+            refreshPermissionStates()
+        }
 
         Scaffold(modifier = Modifier.fillMaxSize()) { insets ->
             Column(
