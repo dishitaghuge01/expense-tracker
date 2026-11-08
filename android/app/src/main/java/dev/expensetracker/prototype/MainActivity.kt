@@ -30,6 +30,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import dev.expensetracker.model.ProbePermissionState
 import dev.expensetracker.model.SyntheticDemo
@@ -94,7 +96,13 @@ class MainActivity : ComponentActivity() {
                 }
                 Text("Optional SMS permission check", style = MaterialTheme.typography.titleLarge)
                 Text("Android may grant, deny or restrict SMS permissions depending on the installer and device. This checks grants only, never message contents. A grant does not enable capture or prove live-alert support.")
-                Checkbox(checked = consent, onCheckedChange = { consent = it })
+                Checkbox(
+                    checked = consent,
+                    onCheckedChange = { consent = it },
+                    modifier = Modifier.semantics {
+                        contentDescription = "Consent to requesting and checking SMS permissions only; no alert reading or capture"
+                    },
+                )
                 Text("I consent to requesting and checking SMS permissions only. No alert reading or capture.")
                 Button(
                     enabled = consent,
