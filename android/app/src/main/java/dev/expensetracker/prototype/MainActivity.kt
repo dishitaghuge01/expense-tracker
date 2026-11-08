@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text("Family Expense Tracker", style = MaterialTheme.typography.headlineMedium)
-                Text("Prototype — not production · 0.0.2")
+                Text("Prototype — not production · 0.0.3")
                 Text("Locked. No sign-in, licence, capture or sharing is implemented. No messages are read, stored or uploaded.")
                 Button(onClick = { showDemo = !showDemo }) { Text(if (showDemo) "Hide synthetic demo" else "Show synthetic demo") }
                 if (showDemo) {

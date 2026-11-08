@@ -22,10 +22,22 @@ jobs:
           packages: platform-tools
       - name: Install specified Android SDK
         run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Cache checksum-pinned Gradle distribution
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('android/gradle/wrapper/gradle-wrapper.properties') }}
+      - name: Bootstrap Gradle with bounded download retries
+        run: |
+          for attempt in 1 2 3; do
+            if ./gradlew --no-daemon --version; then exit 0; fi
+            if [ "$attempt" -lt 3 ]; then sleep 10; fi
+          done
+          exit 1
       - name: Check prototype boundary
         run: python3 ../ops/release/check-prototype-boundary.py
       - name: Test, lint and build
-        run: ./gradlew --no-daemon :core-model:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleRelease :app:bundleRelease
+        run: ./gradlew --no-daemon :core-model:test :core-data:testDebugUnitTest :core-data:assembleDebugAndroidTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleRelease :app:bundleRelease
       - name: Upload test and lint reports
         if: always()
         uses: actions/upload-artifact@v4
