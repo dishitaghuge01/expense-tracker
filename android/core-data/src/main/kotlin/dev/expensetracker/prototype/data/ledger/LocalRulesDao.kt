@@ -74,7 +74,8 @@ abstract class LocalRulesDao {
         return confirmCoverageRow(id, statementDigest, at)
     }
 
-    @Upsert
+    /** Operation IDs identify immutable inverse changes; repeated saves must fail. */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     abstract suspend fun putUndo(undo: CorrectionUndoEntity)
 
     @Query("SELECT * FROM correction_undo WHERE operationId = :operationId AND expiresAt > :now")
