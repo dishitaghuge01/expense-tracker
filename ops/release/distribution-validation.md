@@ -14,7 +14,8 @@ Owner selected Google Play. The browser procedure below is retained as historica
 - [ ] Configure production package, Play App Signing, separate upload key and OAuth app-signing fingerprints.
 - [ ] Submit an AAB to the appropriate Play testing track and test installs/updates through Play, not ADB or a direct APK link.
 - [ ] Repeat consent, both grants, activated real-alert and update-preservation checks on the PRD device/household matrix.
-- [ ] Propose compliant purchase/refund/entitlement flow and revised launch fees for owner approval; do not implement the superseded Razorpay design.
+- [x] Owner approved free installation plus a one-time non-consumable Play Billing household unlock, initially ₹499 with later Play Console price changes allowed; existing purchasers keep their licence without another charge.
+- [ ] Finalize the Play purchase/refund/entitlement provider contract and obtain approval for revised launch fees/spend; do not implement the superseded Razorpay design.
 
 Official verification references: [SMS/Call Log permissions](https://support.google.com/googleplay/android-developer/answer/10208820), [Payments policy](https://support.google.com/googleplay/android-developer/answer/9858738), [App signing](https://developer.android.com/studio/publish/app-signing), [Personal-account testing requirements](https://support.google.com/googleplay/android-developer/answer/14151465). These are verification tasks, not claims of completed approval.
 

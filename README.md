@@ -7,13 +7,13 @@ Android-first, private-by-default household expense tracking for India.
 - [Product requirements](prd.md)
 - [Technical specification and build plan](buildplan.md)
 - [Distribution validation checklist](ops/release/distribution-validation.md)
-- [Google Play readiness and pending billing proposal](ops/release/play-readiness.md)
+- [Google Play readiness and approved billing model](ops/release/play-readiness.md)
 
 The specifications are authoritative. Implementation follows work packages 0–8 in order. Public checkout stays closed until all release gates pass. No bank/device coverage has been verified yet.
 
 ## Current status
 
-Work package 0: disposable Android prototype with a fictional demo and consent-only SMS grant probe. See [Android build and phone-check instructions](android/README.md). No real capture, backend, checkout, or deployed website exists yet. Google Play is the selected launch channel. Domain and production identifiers remain deferred; Play permission eligibility and commerce/budget revisions need verification and approval. A prototype install does not satisfy public distribution gates.
+Work package 0: disposable Android prototype with a fictional demo and consent-only SMS grant probe. See [Android build and phone-check instructions](android/README.md). No real capture, backend, checkout, or deployed website exists yet. Google Play is the selected launch channel. Domain and production identifiers remain deferred; the free-install/one-time Play Billing model is approved, initially ₹499 with future Play Console price changes allowed. Play permission eligibility, detailed billing contracts and revised budget/spend remain gated. A prototype install does not satisfy public distribution gates.
 
 The source repository is public at the owner's explicit request, overriding the private-source setting in the build plan. Signed APKs will use a separate public releases-only repository.
 

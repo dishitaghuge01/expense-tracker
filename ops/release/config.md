@@ -8,9 +8,11 @@ Owner explicitly requested a public source repository. This overrides only the p
 
 - Source: https://github.com/dishitaghuge01/expense-tracker
 - Releases-only repository: not required for the selected Play launch
-- Launch channel: Google Play, selected by owner; commerce implementation blocked on Play policy verification and owner-approved revisions
+- Launch channel: Google Play, selected by owner
+- Billing model: owner-approved free installation plus one-time non-consumable Play Billing household unlock; detailed provider contract and Console setup still pending
+- Initial price: ₹499; later owner-controlled INR changes in Play Console (for example ₹299/₹399) are allowed, subject to supported pricing. No price change made; existing purchasers are not charged again. App displays Play-returned pricing.
 - Play Console account: not created (owner confirmed); SMS declaration/app-signing/testing eligibility not completed
-- Public Play policy review: relevant SMS money-management exception identified; approval not granted. See `play-readiness.md` for sources, registration/testing requirements and an unapproved billing proposal.
+- Public Play policy review: relevant SMS money-management exception identified; approval not granted. See `play-readiness.md` for sources, registration/testing requirements and the approved billing model and remaining implementation prerequisites.
 - Domain: owner has none; purchase deferred during local development
 
 ## Deployment identifiers — awaiting owner input / verification
