@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
 }
 android {
     namespace = "dev.expensetracker.prototype.data"
@@ -16,9 +17,12 @@ android {
     }
 }
 kotlin { jvmToolchain(17) }
+ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 dependencies {
     implementation(project(":core-model"))
     implementation(libs.androidx.room.runtime)
+    implementation(libs.kotlinx.coroutines.core)
+    ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.sqlite)
     implementation(libs.sqlcipher)
     testImplementation(libs.junit)
