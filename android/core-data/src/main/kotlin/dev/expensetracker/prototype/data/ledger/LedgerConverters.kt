@@ -14,6 +14,9 @@ import java.util.UUID
 class LedgerConverters {
     private val instantFormat = DateTimeFormatterBuilder().appendInstant(9).toFormatter(Locale.ROOT)
 
+    @TypeConverter fun undoToText(value: CorrectionUndoPayload): String = CorrectionUndoCodec.encode(value)
+    @TypeConverter fun textToUndo(value: String): CorrectionUndoPayload = CorrectionUndoCodec.decode(value)
+
     @TypeConverter fun uuidToText(value: UUID): String = value.toString()
     @TypeConverter fun textToUuid(value: String): UUID {
         val parsed = try { UUID.fromString(value) } catch (_: IllegalArgumentException) {
