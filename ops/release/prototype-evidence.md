@@ -31,10 +31,10 @@ Owner reported both READ_SMS and RECEIVE_SMS as granted with capture disabled. A
 Version 0.0.2 (code 2) persists only the probe-started boolean and refreshes real grant status on resume/relaunch. No alert content or permission result is persisted, and no prompt/capture is automatically enabled. It also updates the footer to reflect the selected Play launch.
 
 - Current debug output: `android/app/build/outputs/apk/debug/app-debug.apk`
-- SHA-256: `59f1df1a3a9d8735238765c3225690241479628ad6efb27392c243ac771b3066`
+- Current output SHA-256 after adding the unused pure Kotlin foundation: `cb3f094c648f2fa302c10c60e3d78499c45f217009bb8e47cd8439707e117613` (the original 0.0.2 fix-build hash was `59f1df1a3a9d8735238765c3225690241479628ad6efb27392c243ac771b3066`). No new build has been installed on the phone.
 - Local locked-dependency tests, lint, debug and optimized unsigned-release builds pass; APK v2 signature verified.
 - Disposable unsigned `bundleRelease` build passes and AAB ZIP integrity check reports no errors. This is not Play acceptance or production signing.
-- Existing three pure Kotlin tests pass; they do not exercise Android process death. The lifecycle fix still requires device regression testing.
+- Now 34 pure Kotlin tests pass: the original three plus exact INR parsing/formatting, strict dates/IST boundaries and deterministic scoped monthly accounting. The new functions use synthetic records only and are not wired to alert capture or ledger screens. These tests do not exercise Android process death; the lifecycle fix still requires device regression testing.
 - Owner deferred testing; version 0.0.2 has not been installed. Run the consented probe once after updating (the previous build stored no probe history), revoke SMS, return/relaunch, and verify actual non-granted status rather than “Not checked.”
 - Rotation, large text, screen-reader, Play-install/live-alert and same-key update checks remain pending.
 
