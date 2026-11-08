@@ -2,13 +2,25 @@
 
 Sources: build plan §§1, 4, 9–10; PRD §§3, 5. All checks below are pending. A checklist is not evidence that a gate passed.
 
-## Channel decision pending
+## Google Play selected
 
-Owner has deferred website APK versus Google Play. The browser procedure below is conditional on the website option, not a chosen launch route. Prepare tooling and synthetic/consent tests now; finalize channel, identifiers, signing, permission eligibility and any payment-policy changes before a public pilot. Domain purchase can wait during local development. A disposable prototype application ID still requires owner approval.
+Owner selected Google Play. The browser procedure below is retained as historical website-option reference only; it is not the launch gate. Prepare tooling and synthetic/consent tests now; finalize identifiers, Play App Signing, SMS permission eligibility and owner-approved payment-policy/budget revisions before a public pilot. Domain purchase can wait during local development. A disposable prototype application ID is owner-approved.
+
+### Active Play gate additions
+
+- [ ] Verify Play Console account type, identity/device verification and current testing requirements; no account purchase authorized here.
+- [ ] Verify SMS permission eligibility and required declaration/review; do not assume the expense-tracking use case is automatically approved.
+- [ ] Verify current target-API submission requirement; retain API 36 until any change is approved.
+- [ ] Configure production package, Play App Signing, separate upload key and OAuth app-signing fingerprints.
+- [ ] Submit an AAB to the appropriate Play testing track and test installs/updates through Play, not ADB or a direct APK link.
+- [ ] Repeat consent, both grants, activated real-alert and update-preservation checks on the PRD device/household matrix.
+- [ ] Propose compliant purchase/refund/entitlement flow and revised launch fees for owner approval; do not implement the superseded Razorpay design.
+
+Official verification references: [SMS/Call Log permissions](https://support.google.com/googleplay/android-developer/answer/10208820), [Payments policy](https://support.google.com/googleplay/android-developer/answer/9858738), [App signing](https://developer.android.com/studio/publish/app-signing), [Personal-account testing requirements](https://support.google.com/googleplay/android-developer/answer/14151465). These are verification tasks, not claims of completed approval.
 
 Available short-term device: Redmi Note 11T 5G (21091116AI), Android 13, build TP1A.220624.014. No tests performed. A replacement phone requires its own device-specific checks; no automatic private-ledger migration is promised.
 
-## Preconditions
+## Historical website-option preconditions (superseded)
 
 - [ ] Confirm owner-controlled domain and derived application ID.
 - [ ] Establish dedicated, offline-kept production signing key; record public fingerprint only.
@@ -24,7 +36,7 @@ The locked app may request/check permissions only after explicit consent. It mus
 
 Live-bank-SMS testing requires a separately activated, consented private test path. A permission grant alone does not authorize capture. Synthetic tests do not establish real bank-format coverage.
 
-## On-device install procedure
+## Historical browser install procedure (superseded)
 
 For each test combination, record only non-identifying device/manufacturer, Android version, browser version, APK version/hash, date, result and bounded reason codes. Keep participant/contact details and real financial data out of this repository.
 
@@ -38,11 +50,11 @@ For each test combination, record only non-identifying device/manufacturer, Andr
 8. Download a newer APK through the same HTTPS channel. Verify Android accepts its signature and preserves app data on update.
 9. Record failures and exclude unverified combinations from advertised support. If core public-install capture fails, keep checkout closed and testing private.
 
-## Pilot installation gate (not satisfied by one successful test)
+## Pilot installation gate (Google Play; not satisfied by one successful test)
 
 - 12 volunteers, ideally six real households.
 - At least three manufacturers; Android 13–16 where available.
-- At least 10 of 12 complete browser installation and live SMS activation without developer tools.
+- At least 10 of 12 complete Play installation and live SMS activation without developer tools.
 - No unresolved failure in any advertised combination.
 - Verify update data preservation and permission-revoke status.
 

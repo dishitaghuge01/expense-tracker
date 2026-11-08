@@ -1,6 +1,6 @@
 # Disposable Android prototype
 
-Application ID: `dev.expensetracker.prototype`. Not a production identity. Website versus Google Play is undecided. This APK does not qualify either launch channel.
+Application ID: `dev.expensetracker.prototype`. Not a production identity. Google Play is now selected. This direct-install prototype does not qualify the Play launch gate. Its original version 0.0.1 footer predates that decision; it does not override the current PRD.
 
 ## Scope
 

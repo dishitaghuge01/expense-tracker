@@ -7,8 +7,9 @@ Status: preparation only; no deployment or verified capture coverage.
 Owner explicitly requested a public source repository. This overrides only the private-source setting in build plan §1; all data boundaries and secret-handling requirements remain unchanged.
 
 - Source: https://github.com/dishitaghuge01/expense-tracker
-- Releases-only repository: not created; conditional on website distribution
-- Launch channel: deferred by owner (website APK or Google Play); no commerce implementation until resolved
+- Releases-only repository: not required for the selected Play launch
+- Launch channel: Google Play, selected by owner; commerce implementation blocked on Play policy verification and owner-approved revisions
+- Play Console account / SMS declaration / app-signing setup / testing eligibility: not verified
 - Domain: owner has none; purchase deferred during local development
 
 ## Deployment identifiers — awaiting owner input / verification
@@ -31,7 +32,7 @@ Never record signing private keys or provider secrets here.
 - Checkout: closed; no commerce infrastructure exists.
 - Supported bank/device matrix: empty until actual-device evidence is recorded.
 - Notification capture: not enabled or verified.
-- Public pilot: production package and channel-appropriate signing identity, admin-issued licences only; blocked on channel and identifiers.
+- Public pilot: Play testing tracks, production package and Play app-signing identity, admin-issued licences only; blocked on identifiers, Play setup and permission eligibility.
 
 ## Disposable prototype identity
 
