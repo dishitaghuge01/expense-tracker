@@ -19,7 +19,7 @@ Requires Java 17, Android platform 36 and build-tools 36.0.0. From the repositor
 ```sh
 source ops/release/android-env.sh
 cd android
-./gradlew :core-model:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleRelease :app:bundleRelease
+./gradlew :core-model:test :core-data:testDebugUnitTest :core-data:assembleDebugAndroidTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleRelease :app:bundleRelease
 ```
 
 The wrapper verifies the Gradle 8.13 distribution checksum. Versions are pinned in `gradle/libs.versions.toml`; dependency locking is enabled. Freeze the supported toolchain only after a clean CI build.

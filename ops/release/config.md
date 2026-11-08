@@ -11,7 +11,7 @@ Owner explicitly requested a public source repository. This overrides only the p
 - Launch channel: Google Play, selected by owner
 - Billing model: owner-approved free installation plus one-time non-consumable Play Billing household unlock; detailed provider contract and Console setup still pending
 - Initial price: ₹499; later owner-controlled INR changes in Play Console (for example ₹299/₹399) are allowed, subject to supported pricing. No price change made; existing purchasers are not charged again. App displays Play-returned pricing.
-- Play Console account: not created (owner confirmed); SMS declaration/app-signing/testing eligibility not completed
+- Play Console account: not created (owner confirmed); owner intends to publish as an individual. Appropriate Play account classification for this expense-only product still needs confirmation before registration spend. SMS declaration/app-signing/testing eligibility not completed
 - Public Play policy review: relevant SMS money-management exception identified; approval not granted. See `play-readiness.md` for sources, registration/testing requirements and the approved billing model and remaining implementation prerequisites.
 - Domain: owner has none; purchase deferred during local development
 
@@ -39,11 +39,11 @@ Never record signing private keys or provider secrets here.
 
 ## Disposable prototype identity
 
-Owner approved a temporary application ID: `dev.expensetracker.prototype`. This is not derived from an owned domain, is not a production identity, and must not be promoted to public pilot or launch. Initial version: `0.0.1-prototype` (code 1); current build: `0.0.2-prototype` (code 2), process-restart probe-status fix. Redmi regression retest is deferred by owner. Debug signing is development-only; no production key has been generated. The prototype has no capture, authentication, network permission, SMS receiver or notification listener. It requests/checks SMS grants only after consent and offers static synthetic data.
+Owner approved a temporary application ID: `dev.expensetracker.prototype`. This is not derived from an owned domain, is not a production identity, and must not be promoted to public pilot or launch. Initial version: `0.0.1-prototype` (code 1); current build: `0.0.3-prototype` (code 3), adding inactive consent/encrypted-storage foundations. Owner reported that the 0.0.2 Redmi revoke/reopen retest passed; further phone tests are deferred at the owner's request. Debug signing is development-only; no production key has been generated. The prototype has no capture, authentication, network permission, SMS receiver or notification listener. It requests/checks SMS grants only after consent and offers static synthetic data.
 
 ## Available test hardware
 
-Owner reports a Redmi Note 11T 5G, model 21091116AI, Android 13, build TP1A.220624.014, available for a few days. Permissions are owner-reported, not verified for our APK. No device identifier or financial data collected. Repeat selected-channel installation, grants and update checks on any replacement phone.
+Owner reports a Redmi Note 11T 5G, model 21091116AI, Android 13, build TP1A.220624.014, available for a few days. Owner reported both grants for our APK and a successful 0.0.2 revoke/reopen retest; this does not establish Play-track permission eligibility. No device identifier or financial data collected. Repeat selected-channel installation, grants and update checks on any replacement phone.
 
 Replacement behavior remains as specified: revoke old-device sync; restore shared records on the new phone; private history/rules/categories do not automatically migrate. CSV export is not a full backup.
 

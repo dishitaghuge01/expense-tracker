@@ -19,6 +19,12 @@ assert application.attrib[NS + "usesCleartextTraffic"] == "false"
 assert not application.findall("receiver"), "Permission probe must not receive SMS"
 assert not application.findall("service"), "Permission probe must not process notifications"
 
+backup = ET.parse(ANDROID / "app/src/main/res/xml/data_extraction_rules.xml").getroot()
+required_domains = {"root", "file", "database", "sharedpref", "external", "device_root", "device_file", "device_database", "device_sharedpref"}
+for section in ("cloud-backup", "device-transfer"):
+    exclusions = {(node.attrib["domain"], node.attrib["path"]) for node in backup.findall(f"{section}/exclude")}
+    assert all((domain, ".") in exclusions for domain in required_domains), f"Incomplete exclusions: {section}"
+
 # Deliberately conservative source tripwire: no alert reads, networking, or raw-data logging.
 for path in ANDROID.glob("*/src/main/**/*.kt"):
     text = path.read_text()
@@ -26,6 +32,7 @@ for path in ANDROID.glob("*/src/main/**/*.kt"):
         r"contentResolver", r"ContentResolver", r"Telephony\.Sms", r"content://sms",
         r"BroadcastReceiver", r"NotificationListenerService", r"WorkManager",
         r"android\.util\.Log", r"\bprintln\s*\(", r"java\.net", r"okhttp",
+        r"\.fallbackToDestructiveMigration", r"\.allowMainThreadQueries",
     ):
         assert not re.search(forbidden, text), f"Forbidden prototype capability in {path}: {forbidden}"
 print("Prototype static boundary checks passed (device validation still required).")
