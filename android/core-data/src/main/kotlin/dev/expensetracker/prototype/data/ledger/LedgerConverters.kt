@@ -1,6 +1,8 @@
 package dev.expensetracker.prototype.data.ledger
 
 import androidx.room.TypeConverter
+import dev.expensetracker.model.LedgerKey
+import dev.expensetracker.model.LedgerKind
 import dev.expensetracker.model.ReportingDates
 import dev.expensetracker.model.TransactionKind
 import dev.expensetracker.model.TransactionStatus
@@ -13,6 +15,24 @@ import java.util.UUID
 
 class LedgerConverters {
     private val instantFormat = DateTimeFormatterBuilder().appendInstant(9).toFormatter(Locale.ROOT)
+
+    @TypeConverter fun packsToText(value: List<PresetPack>): String = SettingsCodec.encodePacks(value)
+    @TypeConverter fun textToPacks(value: String): List<PresetPack> = SettingsCodec.decodePacks(value)
+    @TypeConverter fun sourceHealthToText(value: List<SourceHealthSnapshot>): String = SettingsCodec.encodeSourceHealth(value)
+    @TypeConverter fun textToSourceHealth(value: String): List<SourceHealthSnapshot> = SettingsCodec.decodeSourceHealth(value)
+    @TypeConverter fun historyScanToText(value: HistoryScanProgress): String = SettingsCodec.encodeHistoryScan(value)
+    @TypeConverter fun textToHistoryScan(value: String): HistoryScanProgress = SettingsCodec.decodeHistoryScan(value)
+
+    @TypeConverter fun scopeToText(value: LedgerKey): String = "${value.kind.name.lowercase(Locale.ROOT)}:${value.id}"
+    @TypeConverter fun textToScope(value: String): LedgerKey {
+        val kind = when (value.substringBefore(':')) {
+            "personal" -> LedgerKind.PERSONAL
+            "household" -> LedgerKind.HOUSEHOLD
+            else -> throw IllegalArgumentException("INVALID_LEDGER_SCOPE")
+        }
+        val id = textToUuid(value.substringAfter(':', ""))
+        return LedgerKey(kind, id).also { require(scopeToText(it) == value) { "INVALID_LEDGER_SCOPE" } }
+    }
 
     @TypeConverter fun undoToText(value: CorrectionUndoPayload): String = CorrectionUndoCodec.encode(value)
     @TypeConverter fun textToUndo(value: String): CorrectionUndoPayload = CorrectionUndoCodec.decode(value)
