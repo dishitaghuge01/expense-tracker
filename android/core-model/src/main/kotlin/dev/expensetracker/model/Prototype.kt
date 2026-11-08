@@ -8,6 +8,17 @@ enum class ProbePermissionState(val label: String) {
     BLOCKED("Not granted — Android may require settings or restrict this grant"),
 }
 
+/** Android's rationale flag cannot establish the underlying installer restriction. */
+fun probePermissionState(
+    granted: Boolean,
+    requestCompleted: Boolean,
+    rationaleAvailable: Boolean,
+): ProbePermissionState = when {
+    granted -> ProbePermissionState.GRANTED
+    requestCompleted && !rationaleAvailable -> ProbePermissionState.BLOCKED
+    else -> ProbePermissionState.NOT_GRANTED
+}
+
 object SyntheticDemo {
     // Fictional, static values. Never derived from alerts or device data.
     val expensesPaise: List<Long> = listOf(85_000L, 24_000L)

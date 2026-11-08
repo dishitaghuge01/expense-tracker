@@ -35,6 +35,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import dev.expensetracker.model.ProbePermissionState
 import dev.expensetracker.model.SyntheticDemo
+import dev.expensetracker.model.probePermissionState
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -58,12 +59,11 @@ class MainActivity : ComponentActivity() {
 
     private fun refreshPermissionStates() {
         permissionStates = permissions.map { permission ->
-            when {
-                checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED -> ProbePermissionState.GRANTED
-                permission in completedRequests && !shouldShowRequestPermissionRationale(permission) ->
-                    ProbePermissionState.BLOCKED
-                else -> ProbePermissionState.NOT_GRANTED
-            }
+            probePermissionState(
+                granted = checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED,
+                requestCompleted = permission in completedRequests,
+                rationaleAvailable = shouldShowRequestPermissionRationale(permission),
+            )
         }
     }
 

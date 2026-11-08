@@ -25,7 +25,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures { compose = true }
-    lint { warningsAsErrors = true }
+    lint {
+        warningsAsErrors = true
+        // PRD/build plan explicitly require API 36; do not silently raise the baseline.
+        disable += "OldTargetApi"
+    }
 }
 kotlin { jvmToolchain(17) }
 dependencies {
