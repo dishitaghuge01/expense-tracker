@@ -41,4 +41,4 @@ Replacement behavior remains as specified: revoke old-device sync; restore share
 
 ## Local toolchain discovery
 
-Initial inspection found Node/npm available, but no Java, Gradle, Android SDK tools, Deno, or Supabase CLI on PATH. Android SDK environment variables were unset. No build or device verification has been performed. Follow the specified stable Java 17 / API 36 toolchain when provisioning; freeze versions only after a clean CI build.
+Installed with owner authorization in user-space under `~/.local/share/expense-tracker-toolchain/`: Temurin Java 17.0.21+9, Android command-line tools (archive 13114758), API 36 platform, build-tools 36.0.0 and platform-tools. SDK licences accepted during installation. Source `ops/release/android-env.sh` to configure the current shell. `java -version` and `adb devices -l` succeeded; no phone was connected. Node/npm are available. Gradle project/wrapper, Deno and Supabase CLI are not yet provisioned. No APK build or device verification has been performed; freeze the complete supported toolchain only after a clean CI build.
