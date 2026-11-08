@@ -16,7 +16,7 @@ Owner explicitly requested a public source repository. This overrides only the p
 | Identifier | Status |
 |---|---|
 | Owner-controlled domain | Not selected or verified; do not purchase without approval |
-| Production application ID | Blocked on owned domain |
+| Production application ID | Blocked on owned domain; prototype ID is not production |
 | Staging application ID | Production ID plus environment suffix, not assigned |
 | Production signing SHA fingerprint | Not generated; production key must be kept offline |
 | Staging signing SHA fingerprint | Not generated; separate key required |
@@ -32,6 +32,10 @@ Never record signing private keys or provider secrets here.
 - Supported bank/device matrix: empty until actual-device evidence is recorded.
 - Notification capture: not enabled or verified.
 - Public pilot: production package and channel-appropriate signing identity, admin-issued licences only; blocked on channel and identifiers.
+
+## Disposable prototype identity
+
+Owner approved a temporary application ID: `dev.expensetracker.prototype`. This is not derived from an owned domain, is not a production identity, and must not be promoted to public pilot or launch. Initial version: `0.0.1-prototype` (code 1). Debug signing is development-only; no production key has been generated. The prototype has no capture, authentication, network permission, SMS receiver or notification listener. It requests/checks SMS grants only after consent and offers static synthetic data.
 
 ## Available test hardware
 
