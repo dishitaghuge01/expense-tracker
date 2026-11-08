@@ -16,7 +16,7 @@ import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** Opens an actual encrypted frozen v1 fixture through the production v2 opener. No phone run yet. */
+/** Frozen encrypted v1/v2 fixtures through the production v3 opener; device execution deferred. */
 @RunWith(AndroidJUnit4::class)
 class LedgerMigrationDeviceTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -24,8 +24,12 @@ class LedgerMigrationDeviceTest {
         buildList { while (cursor.moveToNext()) add((0 until cursor.columnCount).map { cursor.getString(it) }) }
     }
 
-    @Test fun additiveMigrationPreservesAllOldRowsLabelsMetadataAndTriggers() = runBlocking {
-        val subject = "synthetic-v1-migration-${UUID.randomUUID()}"
+    @Test fun additiveMigrationPreservesAllOldRowsLabelsMetadataAndTriggers() = migrate(1)
+
+    @Test fun v2ToV3PreservesNineTablesAndDoesNotInitializeConsentOrBudgetAlerts() = migrate(2)
+
+    private fun migrate(fromVersion: Int) = runBlocking {
+        val subject = "synthetic-v$fromVersion-migration-${UUID.randomUUID()}"
         val vault = DatabaseKeyVault(context)
         val file = vault.databaseFile(subject)
         val secret = vault.secret(subject)
@@ -36,21 +40,24 @@ class LedgerMigrationDeviceTest {
         val shared = UUID.randomUUID()
         val now = Instant.parse("2026-11-08T12:34:56.123456789Z")
         val timestamp = LedgerConverters().instantToText(now)
-        val tables = listOf("account_alias", "personal_category", "personal_budget", "local_transaction", "capture_observation")
+        val v1Tables = listOf("account_alias", "personal_category", "personal_budget", "local_transaction", "capture_observation")
+        val tables = v1Tables + if (fromVersion == 2) listOf("merchant_rule", "sharing_rule", "correction_undo", "coverage_check") else emptyList()
         val before = mutableMapOf<String, List<List<String?>>>()
         var triggers: List<List<String?>> = emptyList()
         try {
             System.loadLibrary("sqlcipher")
             Logger.setTarget(NoopTarget())
-            val callback = object : SupportSQLiteOpenHelper.Callback(1) {
+            val callback = object : SupportSQLiteOpenHelper.Callback(fromVersion) {
                 override fun onConfigure(db: SupportSQLiteDatabase) { db.setForeignKeyConstraintsEnabled(true) }
-                override fun onCreate(db: SupportSQLiteDatabase) { LedgerV1Fixture.create(db) }
-                override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) { error("NOT_A_V1_FIXTURE") }
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    if (fromVersion == 1) LedgerV1Fixture.create(db) else LedgerV2Fixture.create(db)
+                }
+                override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) { error("NOT_A_FROZEN_FIXTURE") }
             }
             PreservingCipherFactory(secret).create(SupportSQLiteOpenHelper.Configuration.builder(context)
                 .name(file.absolutePath).callback(callback).build()).use { helper ->
                 val db = helper.writableDatabase
-                assertEquals(1, db.version)
+                assertEquals(fromVersion, db.version)
                 db.execSQL("INSERT INTO account_alias VALUES (?,?,?,?,?,?,?)", arrayOf(account.toString(), "SBI", "bank", "1234", "Synthetic salary", "active", timestamp))
                 db.execSQL("INSERT INTO personal_category VALUES (?,?,?,?)", arrayOf(category.toString(), "groceries", "Synthetic Café", null))
                 db.execSQL("INSERT INTO personal_category VALUES (?,?,?,?)", arrayOf(archived.toString(), null, "Old synthetic label", timestamp))
@@ -63,18 +70,28 @@ class LedgerMigrationDeviceTest {
                         timestamp, "event", "Synthetic Café", category.toString(), "Household", "b".repeat(64), "high",
                         "SYNTHETIC", "confirmed", null, 7L, shared.toString(), 3L, "shared", timestamp, timestamp))
                 db.execSQL("INSERT INTO capture_observation VALUES (?,?,?,?,?,?,?,?,?)", arrayOf<Any?>("a".repeat(64), transaction.toString(), "sms", "synthetic.v1", 1, timestamp, "SBI", "captured", "SYNTHETIC"))
+                if (fromVersion == 2) {
+                    db.execSQL("INSERT INTO merchant_rule VALUES (?,?,?,?,?)", arrayOf<Any?>(UUID.randomUUID().toString(), "old synthetic café", account.toString(), category.toString(), timestamp))
+                    db.execSQL("INSERT INTO sharing_rule VALUES (?,?,?,?,?,?,?)", arrayOf<Any?>(UUID.randomUUID().toString(), UUID.randomUUID().toString(), "old synthetic café", account.toString(), UUID.randomUUID().toString(), 1, timestamp))
+                    val undoJson = "{\"transactions\":[{\"transactionId\":\"$transaction\",\"previousCategoryId\":\"$category\",\"postEditVersion\":7}],\"priorRule\":null,\"postRule\":null}"
+                    db.execSQL("INSERT INTO correction_undo VALUES (?,?,?,?)", arrayOf<Any?>(UUID.randomUUID().toString(), undoJson, timestamp, LedgerConverters().instantToText(now.plusSeconds(86400))))
+                    db.execSQL("INSERT INTO coverage_check VALUES (?,?,?,?,?,?,?,?,?,?)", arrayOf<Any?>(UUID.randomUUID().toString(), account.toString(), "2026-11-01", "2026-11-08", "c".repeat(64), 3, 1, 1, 1, null))
+                }
                 // An independently named old trigger detects destructive reconstruction even if rows are copied.
                 db.execSQL("""CREATE TRIGGER synthetic_v1_sentinel BEFORE DELETE ON account_alias
                     BEGIN SELECT RAISE(ABORT, 'SYNTHETIC_V1_SENTINEL'); END""")
                 for (table in tables) before[table] = rows(db, "SELECT * FROM $table ORDER BY 1")
                 triggers = rows(db, "SELECT name,sql FROM sqlite_master WHERE type='trigger' ORDER BY name")
-                assertEquals(listOf(listOf("381874798e240c3088f5f6a019e16a4a")), rows(db, "SELECT identity_hash FROM room_master_table WHERE id=42"))
+                val oldIdentity = if (fromVersion == 1) "381874798e240c3088f5f6a019e16a4a" else "ce301312a207671c27d58e0ea795a580"
+                assertEquals(listOf(listOf(oldIdentity)), rows(db, "SELECT identity_hash FROM room_master_table WHERE id=42"))
             }
             assertFalse(file.readBytes().take(16).toByteArray().contentEquals("SQLite format 3\u0000".toByteArray()))
             LocalLedgerDatabase.open(context, subject).use { handle ->
                 val db = handle.database
                 val sql = db.openHelper.writableDatabase
-                assertEquals(2, sql.version)
+                assertEquals(3, sql.version)
+                assertNull(db.preferences().settings())
+                assertEquals(listOf(listOf("0")), rows(sql, "SELECT COUNT(*) FROM budget_alerts"))
                 for (table in tables) assertEquals("Preserve $table", before[table], rows(sql, "SELECT * FROM $table ORDER BY 1"))
                 val afterTriggers = rows(sql, "SELECT name,sql FROM sqlite_master WHERE type='trigger' ORDER BY name")
                 assertTrue(afterTriggers.containsAll(triggers))
@@ -90,8 +107,8 @@ class LedgerMigrationDeviceTest {
                 val rule = MerchantRuleEntity(UUID.randomUUID(), "synthetic café", account, category, now)
                 db.rules().putMerchantRule(rule)
                 assertEquals(rule, db.rules().merchantRule(rule.merchantKey, account))
-                for (table in tables) assertEquals("Future-only rule preserves $table", before[table], rows(sql, "SELECT * FROM $table ORDER BY 1"))
-                for (table in listOf("sharing_rule", "correction_undo", "coverage_check")) {
+                for (table in v1Tables) assertEquals("Future-only rule preserves $table", before[table], rows(sql, "SELECT * FROM $table ORDER BY 1"))
+                for (table in if (fromVersion == 1) listOf("sharing_rule", "correction_undo", "coverage_check") else emptyList()) {
                     assertEquals(listOf(listOf("0")), rows(sql, "SELECT COUNT(*) FROM $table"))
                 }
             }
