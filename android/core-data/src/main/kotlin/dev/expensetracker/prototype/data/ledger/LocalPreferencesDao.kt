@@ -38,12 +38,10 @@ abstract class LocalPreferencesDao {
     abstract suspend fun setCapturePaused(paused: Boolean): Int
 
     @Query("UPDATE local_settings SET selectedPacks = :packs WHERE id = 1")
-    protected abstract suspend fun setPresetPacksRow(packs: List<PresetPack>): Int
+    protected abstract suspend fun setPresetPacksRow(packs: String): Int
 
-    suspend fun setPresetPacks(packs: List<PresetPack>): Int {
-        requirePacks(packs)
-        return setPresetPacksRow(packs)
-    }
+    suspend fun setPresetPacks(packs: List<PresetPack>): Int =
+        setPresetPacksRow(SettingsCodec.encodePacks(packs))
 
     @Query("UPDATE local_settings SET localLockEnabled = :enabled WHERE id = 1")
     protected abstract suspend fun setLocalLockRow(enabled: Boolean): Int
@@ -54,7 +52,7 @@ abstract class LocalPreferencesDao {
     }
 
     @Query("UPDATE local_settings SET sourceHealth = :health WHERE id = 1")
-    protected abstract suspend fun setSourceHealthRow(health: List<SourceHealthSnapshot>): Int
+    protected abstract suspend fun setSourceHealthRow(health: String): Int
 
     /** Updates cached metadata only; the independent consent/pause/lock columns are never touched. */
     @Transaction
@@ -62,7 +60,7 @@ abstract class LocalPreferencesDao {
         val current = settings() ?: return 0
         val replaced = current.sourceHealth.any { it.source == snapshot.source }
         val health = current.sourceHealth.map { if (it.source == snapshot.source) snapshot else it }
-        return setSourceHealthRow(if (replaced) health else health + snapshot)
+        return setSourceHealthRow(SettingsCodec.encodeSourceHealth(if (replaced) health else health + snapshot))
     }
 
     @Query("UPDATE local_settings SET historyScan = :progress WHERE id = 1")
