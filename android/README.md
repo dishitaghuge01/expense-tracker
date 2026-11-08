@@ -1,13 +1,14 @@
 # Disposable Android prototype
 
-Application ID: `dev.expensetracker.prototype`. Not a production identity. Google Play is now selected. This direct-install prototype does not qualify the Play launch gate. Its original version 0.0.1 footer predates that decision; it does not override the current PRD.
+Application ID: `dev.expensetracker.prototype`. Not a production identity. Google Play is now selected. This direct-install prototype does not qualify the Play launch gate.
 
 ## Scope
 
 - Static, explicitly fictional payment demo.
 - Separate opt-in READ_SMS / RECEIVE_SMS grant probe.
 - Refresh grant state after returning from Android settings.
-- No SMS queries, receivers, notification listener, capture, network access, storage, activation or sharing.
+- No SMS queries, receivers, notification listener, capture, network access, ledger storage, activation or sharing.
+- Version 0.0.2 stores only a boolean recording that the user started the consented probe. On return or process restart it rechecks actual Android grants rather than restoring stale results. This metadata does not authorize alert capture or automatically request permissions.
 
 The status “Not granted” intentionally does not guess whether Android/installer restrictions or user denial caused it. After a completed request, lack of an Android rationale produces a settings/restriction hint, not a definitive diagnosis of installer restrictions. Grant success is not evidence of real-alert capture.
 
@@ -32,7 +33,8 @@ Debug APK: `app/build/outputs/apk/debug/app-debug.apk`. The release task checks 
 3. Verify that the permission-check button is disabled until explicit consent.
 4. Consent and run the check. Record READ_SMS and RECEIVE_SMS separately; restricted SMS grants may be unavailable for this installer.
 5. Deny a prompt and verify the app still works, without claiming capture is available.
-6. Open Android app settings, change/revoke grants, return and verify the status refreshes. Repeat using the refresh button.
+6. Open Android app settings, change/revoke grants, return and verify the status refreshes. Repeat using the refresh button. After revocation, close/reopen the app and verify it still reports actual non-granted state, not “Not checked.” Android may kill the process on permission revocation.
+   Regression: version 0.0.1 lost its in-memory probe history after revocation on the Redmi. Version 0.0.2 persists a probe-started boolean; run the consented probe once after updating to initialize it. The earlier build had no persisted history to migrate.
 7. Rotate the phone, test large text and a screen reader; confirm controls and consent are understandable.
 8. Do not send SMS contents, statements or screenshots of real financial data to GitHub.
 

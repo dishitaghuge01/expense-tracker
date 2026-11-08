@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
 import dev.expensetracker.model.ProbePermissionState
 import dev.expensetracker.model.SyntheticDemo
 import dev.expensetracker.model.probePermissionState
@@ -43,6 +44,8 @@ class MainActivity : ComponentActivity() {
     private val permissions = listOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS)
     private var permissionStates by mutableStateOf<List<ProbePermissionState>>(emptyList())
     private var completedRequests = emptySet<String>()
+    // Store only whether the user ran the consented probe, never permission results or alerts.
+    private val probeHistory by lazy { getSharedPreferences("permission_probe", MODE_PRIVATE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,7 +57,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         // Refresh grant state only; never query the SMS content provider.
-        if (permissionStates.isNotEmpty()) refreshPermissionStates()
+        if (probeHistory.getBoolean("started", false)) refreshPermissionStates()
     }
 
     private fun refreshPermissionStates() {
@@ -84,7 +87,7 @@ class MainActivity : ComponentActivity() {
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text("Family Expense Tracker", style = MaterialTheme.typography.headlineMedium)
-                Text("Prototype — not production · 0.0.1")
+                Text("Prototype — not production · 0.0.2")
                 Text("Locked. No sign-in, licence, capture or sharing is implemented. No messages are read, stored or uploaded.")
                 Button(onClick = { showDemo = !showDemo }) { Text(if (showDemo) "Hide synthetic demo" else "Show synthetic demo") }
                 if (showDemo) {
@@ -109,6 +112,8 @@ class MainActivity : ComponentActivity() {
                 Button(
                     enabled = consent,
                     onClick = {
+                        // Persist before leaving for system UI: revoking SMS may kill this process.
+                        probeHistory.edit { putBoolean("started", true) }
                         refreshPermissionStates()
                         permissionLauncher.launch(permissions.toTypedArray())
                     },
@@ -123,7 +128,7 @@ class MainActivity : ComponentActivity() {
                     }) { Text("Open Android app settings") }
                 }
                 Text("There is no capture switch in this APK. Unchecking consent stops further requests; revoke existing grants in Android settings. Synthetic demo and permission check are independent.")
-                Text("Test build only. It cannot qualify a public launch. Website versus Play Store is undecided.")
+                Text("Test build only. Google Play is the chosen launch channel; this USB install does not qualify its launch gates.")
             }
         }
     }
