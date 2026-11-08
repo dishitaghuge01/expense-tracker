@@ -12,7 +12,7 @@ The specifications are authoritative. Implementation follows work packages 0–8
 
 ## Current status
 
-Work package 0: distribution validation preparation. No APK, backend, checkout, or deployed website exists yet.
+Work package 0: disposable Android prototype with a fictional demo and consent-only SMS grant probe. See [Android build and phone-check instructions](android/README.md). No real capture, backend, checkout, or deployed website exists yet. Launch channel (website APK or Google Play), domain and production identifiers are deferred. A prototype install does not satisfy public distribution gates.
 
 The source repository is public at the owner's explicit request, overriding the private-source setting in the build plan. Signed APKs will use a separate public releases-only repository.
 
