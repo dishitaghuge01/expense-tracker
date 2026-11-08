@@ -29,6 +29,9 @@ android {
         warningsAsErrors = true
         // PRD/build plan explicitly require API 36; do not silently raise the baseline.
         disable += "OldTargetApi"
+        // Pin the compatible stable toolchain; review upgrades deliberately, not on each CI run.
+        // These are update suggestions, not correctness or security checks.
+        disable += setOf("AndroidGradlePluginVersion", "GradleDependency", "NewerVersionAvailable")
     }
 }
 kotlin { jvmToolchain(17) }

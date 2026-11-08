@@ -119,7 +119,7 @@ class MainActivity : ComponentActivity() {
                 if (permissionStates.isNotEmpty()) {
                     OutlinedButton(onClick = { refreshPermissionStates() }) { Text("Refresh permission status") }
                     OutlinedButton(onClick = {
-                        startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
+                        startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)))
                     }) { Text("Open Android app settings") }
                 }
                 Text("There is no capture switch in this APK. Unchecking consent stops further requests; revoke existing grants in Android settings. Synthetic demo and permission check are independent.")
