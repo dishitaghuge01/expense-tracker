@@ -94,6 +94,8 @@ for table, nullable in {
         assert field.get("notNull", False) == (column not in nullable), f"Unexpected nullability: {table}.{column}"
         if column not in {"enabled", "rowCount", "matchedCount", "newCount", "unresolvedCount"}:
             assert field["affinity"] == "TEXT", f"Expected normalized TEXT: {table}.{column}"
+assert next(field for field in v2_entities["sharing_rule"]["fields"] if field["columnName"] == "enabled")["defaultValue"] == "0"
+assert any(index["columnNames"] == ["householdId", "enabled"] for index in v2_entities["sharing_rule"].get("indices", []))
 assert any(index["columnNames"][0] == "expiresAt" for index in v2_entities["correction_undo"].get("indices", []))
 assert any(index["columnNames"] == ["merchantKey", "accountId"] and index["unique"]
            for index in v2_entities["merchant_rule"].get("indices", []))

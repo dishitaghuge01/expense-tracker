@@ -90,6 +90,7 @@ class LedgerMigrationDeviceTest {
                 val rule = MerchantRuleEntity(UUID.randomUUID(), "synthetic café", account, category, now)
                 db.rules().putMerchantRule(rule)
                 assertEquals(rule, db.rules().merchantRule(rule.merchantKey, account))
+                for (table in tables) assertEquals("Future-only rule preserves $table", before[table], rows(sql, "SELECT * FROM $table ORDER BY 1"))
                 for (table in listOf("sharing_rule", "correction_undo", "coverage_check")) {
                     assertEquals(listOf(listOf("0")), rows(sql, "SELECT COUNT(*) FROM $table"))
                 }

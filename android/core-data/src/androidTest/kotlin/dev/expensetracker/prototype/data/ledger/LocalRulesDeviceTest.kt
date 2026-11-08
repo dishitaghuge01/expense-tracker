@@ -66,6 +66,19 @@ class LocalRulesDeviceTest {
         failed { db.rules().putMerchantRule(general.copy(id = id(), merchantKey = "orphan", categoryId = id())) }
     }
 
+    @Test fun archivedCategoriesCannotBeReturnedByRuleLookup() = withDatabase { db ->
+        val account = account(db)
+        val general = MerchantRuleEntity(id(), "synthetic shop", null, category(db), now)
+        val specific = general.copy(id = id(), accountId = account, categoryId = category(db, "Transport"))
+        db.rules().putMerchantRule(general)
+        db.rules().putMerchantRule(specific)
+        db.ledger().archiveCategory(specific.categoryId, now)
+        assertEquals(general, db.rules().merchantRule(general.merchantKey, account))
+        db.ledger().archiveCategory(general.categoryId, now)
+        assertNull(db.rules().merchantRule(general.merchantKey, account))
+        assertNull(db.rules().merchantRule(general.merchantKey, null))
+    }
+
     @Test fun merchantScopeUniquenessIsEnforcedForNullAndConcreteAccountsInSQL() = withDatabase { db ->
         val account = account(db)
         val rule = MerchantRuleEntity(id(), "synthetic shop", null, category(db), now)
@@ -118,6 +131,28 @@ class LocalRulesDeviceTest {
         assertEquals(live, db.rules().undo(live.operationId, expired.expiresAt))
         assertEquals(0, db.rules().purgeExpiredUndo(expired.expiresAt))
         assertEquals(1, db.rules().purgeExpiredUndo(live.expiresAt))
+    }
+
+    @Test fun directSqlCannotBypassLocalRuleChecks() = withDatabase { db ->
+        val a = account(db)
+        val check = CoverageCheckEntity(id(), a, LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 8),
+            "b".repeat(64), 3, 1, 2, 0)
+        db.rules().putCoverage(check)
+        val sql = db.openHelper.writableDatabase
+        for (assignment in listOf("rowCount=10001", "matchedCount=-1", "newCount=3", "unresolvedCount=1",
+            "fromDate='2026-12-01'", "statementDigest='RAW_SYNTHETIC_INPUT'", "matchedCount=1.5")) {
+            assertThrows(RuntimeException::class.java) { sql.execSQL("UPDATE coverage_check SET $assignment") }
+        }
+        val sharing = SharingRuleEntity(id(), id(), "synthetic shop", null, id(), false, now)
+        db.rules().putSharingRule(sharing)
+        assertThrows(RuntimeException::class.java) { sql.execSQL("UPDATE sharing_rule SET merchantKey=NULL,accountId=NULL") }
+        assertThrows(RuntimeException::class.java) { sql.execSQL("UPDATE sharing_rule SET enabled=2") }
+        val undo = CorrectionUndoEntity(id(), CorrectionUndoPayload(listOf(TransactionCategoryUndo(id(), null, 1))), now)
+        db.rules().putUndo(undo)
+        assertThrows(RuntimeException::class.java) { sql.execSQL("UPDATE correction_undo SET expiresAt=createdAt") }
+        assertThrows(RuntimeException::class.java) { sql.execSQL("UPDATE correction_undo SET expiresAt=?", arrayOf(LedgerConverters().instantToText(now.plusSeconds(86400).plusNanos(1)))) }
+        assertEquals(undo, db.rules().undo(undo.operationId, now))
+        assertEquals(check, db.rules().coverage(check.id))
     }
 
     @Test fun coverageRequiresExplicitDigestBoundConfirmationWithNoUnresolvedRows() = withDatabase { db ->

@@ -72,8 +72,13 @@ class LocalRulesValuesTest {
             encoded.replace("\"postEditVersion\":2", "\"postEditVersion\":\"2\""),
             encoded.replace("\"postEditVersion\":2", "\"postEditVersion\":0"),
             encoded.replace(id.toString(), marker),
+            encoded.replace(id.toString(), "1-1-1-1-1"),
+            encoded.replace("\"postEditVersion\":2", "\"postEditVersion\":true"),
+            encoded.replace("\"postEditVersion\":2", "\"postEditVersion\":9223372036854775808"),
             "{\"transactions\":[{\"transactionId\":\"$id\",\"previousCategoryId\":false,\"postEditVersion\":2}]}",
             snapshotJson.replace(now.toString(), marker),
+            snapshotJson.replace(now.toString(), "2026-02-30T12:34:56Z"),
+            snapshotJson.replace(category.toString(), marker),
             "{\"transactions\":[]}", "{\"transactions\":false}", "[]", "null", "{", marker.repeat(1000),
             "{\"transactions\":[{\"transactionId\":\"$id\",\"previousCategoryId\":null,\"postEditVersion\":1},{\"transactionId\":\"$id\",\"previousCategoryId\":null,\"postEditVersion\":2}]}",
             encoded.replaceFirst("{", "{\"formatVersion\":999,"),
@@ -84,6 +89,17 @@ class LocalRulesValuesTest {
             val error = assertThrows(IllegalArgumentException::class.java) { CorrectionUndoCodec.decode(text) }
             assertTrue((error.message ?: "").length <= 200)
             assertFalse((error.message ?: "").contains(marker))
+            assertNull(error.cause)
+        }
+    }
+
+    @Test fun `JSON rejects inconsistent rule snapshot identity and scope`() {
+        fun snapshotJson(value: MerchantRuleSnapshot): String =
+            "{\"id\":\"${value.id}\",\"merchantKey\":\"${value.merchantKey}\",\"accountId\":${value.accountId?.let { "\"$it\"" } ?: "null"},\"categoryId\":\"${value.categoryId}\",\"updatedAt\":\"$now\"}"
+        val before = snapshot()
+        for (after in listOf(before.copy(id = account), before.copy(accountId = account), before.copy(merchantKey = "other"))) {
+            val text = "{\"transactions\":[],\"priorRule\":${snapshotJson(before)},\"postRule\":${snapshotJson(after)}}"
+            invalid { CorrectionUndoCodec.decode(text) }
         }
     }
 
