@@ -1,0 +1,28 @@
+# Credentials and local environment
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+
+# Android / Gradle
+.gradle/
+.kotlin/
+**/build/
+local.properties
+.idea/
+*.iml
+
+# Web / tools
+node_modules/
+web/dist/
+.supabase/
+supabase/.temp/
+
+# Local machine and private operational artifacts
+.DS_Store
+*.log
+ops/private/
