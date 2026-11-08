@@ -124,6 +124,13 @@ class LocalRulesDeviceTest {
         val live = expired.copy(operationId = id(), expiresAt = now.plusSeconds(20))
         db.rules().putUndo(expired)
         db.rules().putUndo(live)
+        val replacement = expired.copy(
+            payload = CorrectionUndoPayload(listOf(TransactionCategoryUndo(id(), id(), 3))),
+            createdAt = now.plusSeconds(1), expiresAt = now.plusSeconds(30),
+        )
+        failed { db.rules().putUndo(replacement) }
+        // Operation IDs are insert-only: neither inverse changes nor the retention window can be replaced.
+        assertEquals(expired, db.rules().undo(expired.operationId, now))
         assertEquals(expired, db.rules().undo(expired.operationId, expired.expiresAt.minusNanos(1)))
         assertNull(db.rules().undo(expired.operationId, expired.expiresAt))
         assertNull(db.rules().undo(id(), now))
