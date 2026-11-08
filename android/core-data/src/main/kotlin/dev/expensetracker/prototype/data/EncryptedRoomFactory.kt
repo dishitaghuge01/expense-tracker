@@ -33,6 +33,7 @@ class EncryptedRoomFactory(context: Context) {
         authenticatedSubject: String,
         databaseClass: Class<T>,
         vararg migrations: Migration,
+        callbacks: List<RoomDatabase.Callback> = emptyList(),
     ): EncryptedDatabaseHandle<T> {
         try {
             System.loadLibrary("sqlcipher")
@@ -52,6 +53,7 @@ class EncryptedRoomFactory(context: Context) {
                         db.execSQL("PRAGMA cipher_log = 'none'")
                     }
                 })
+                .also { builder -> callbacks.forEach { builder.addCallback(it) } }
                 .build()
             // Force key/schema verification now, rather than return an apparently working lazy handle.
             database.openHelper.writableDatabase
