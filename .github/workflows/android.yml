@@ -34,10 +34,14 @@ jobs:
             if [ "$attempt" -lt 3 ]; then sleep 10; fi
           done
           exit 1
-      - name: Check prototype boundary
-        run: python3 ../ops/release/check-prototype-boundary.py
+      - name: Check prototype boundary and exported Room schema
+        run: |
+          python3 ../ops/release/check-prototype-boundary.py
+          python3 ../ops/release/check-room-schema.py
       - name: Test, lint and build
         run: ./gradlew --no-daemon :core-model:test :core-data:testDebugUnitTest :core-data:assembleDebugAndroidTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleRelease :app:bundleRelease
+      - name: Verify generated Room schema is checked in
+        run: git diff --exit-code -- core-data/schemas
       - name: Upload test and lint reports
         if: always()
         uses: actions/upload-artifact@v4

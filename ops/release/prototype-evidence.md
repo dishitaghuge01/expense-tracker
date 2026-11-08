@@ -40,10 +40,11 @@ Version 0.0.2 (code 2) persists only the probe-started boolean and refreshes rea
 ## Current version 0.0.3 foundation build
 
 - Code 3, debug APK: `android/app/build/outputs/apk/debug/app-debug.apk`.
-- SHA-256: `e69ef0ae3108d986403c4ff184d559ee77ab617ba91ffb4a49a23fae81fa5616`.
-- 40 core-model tests and 6 encryption-envelope JVM tests pass; lint, debug/release APK, unsigned AAB and Android storage-test compilation pass using dependency locks.
-- Adds fail-closed capture consent/source states and inactive Keystore-wrapped-secret/SQLCipher/Room opening infrastructure. The prototype does not open a ledger or read alerts. Full Room v1 schema/DAOs/migrations are not implemented yet.
-- Seven Android storage tests are compiled but not executed successfully: USB disconnects prevented device discovery. Owner requested further device/user tests be deferred; no more install prompts triggered. Native SQLCipher/Keystore outcomes remain pending.
+- Current SHA-256 after the first Room ledger slice: `a914ce146e7758596faf1dbd416088a167026783e92c2fcfdc571e9a765e5bc9`.
+- 40 core-model and 14 core-data JVM tests pass; lint, debug/release APK, unsigned AAB and Android storage-test compilation pass using dependency locks. A second build without `--write-locks` also passes.
+- Adds fail-closed capture consent/source states and inactive Keystore-wrapped-secret/SQLCipher/Room opening infrastructure. The prototype does not open a ledger or read alerts. The first five-table Room development schema, converters, DAOs, schema export and constraint callbacks are implemented but not instantiated by the prototype. Remaining v1 tables/DAOs/migrations are still pending.
+- Fifteen Android storage tests are compiled but device execution is deferred: seven vault/native cases and eight concrete Room cases. Earlier USB disconnects prevented execution; the owner requested further device/user tests be deferred. No more install prompts triggered. Native SQLCipher/Keystore/Room outcomes remain pending.
+- Exported five-table schema allowlist/type/key/FK checks and synthetic in-memory SQLite DDL pass; these do not exercise Android Room callbacks, SQLCipher or actual data migration.
 - Debug APK signature verifies, packaged app permissions still contain only READ_SMS/RECEIVE_SMS plus AndroidX's internal signature permission, and `zipalign -c -P 16` passes. SQLCipher arm64-v8a/x86_64 ELF LOAD segments report 0x4000 alignment. These are static packaging checks, not a 16 KiB-device runtime test.
 - Version 0.0.3 has not been installed on the phone.
 
