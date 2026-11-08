@@ -19,12 +19,12 @@ Requires Java 17, Android platform 36 and build-tools 36.0.0. From the repositor
 ```sh
 source ops/release/android-env.sh
 cd android
-./gradlew :core-model:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleRelease
+./gradlew :core-model:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleRelease :app:bundleRelease
 ```
 
 The wrapper verifies the Gradle 8.13 distribution checksum. Versions are pinned in `gradle/libs.versions.toml`; dependency locking is enabled. Freeze the supported toolchain only after a clean CI build.
 
-Debug APK: `app/build/outputs/apk/debug/app-debug.apk`. The release task checks optimized compilation but produces an unsigned APK: no production signing key is configured. Debug keys are disposable and must not become production keys. CI debug keys may differ between runners, so CI artifacts cannot establish same-key updates; use the same local debug key for repeated local prototype builds.
+Debug APK: `app/build/outputs/apk/debug/app-debug.apk`. The release task checks optimized compilation but produces an unsigned APK: no production signing key is configured. `bundleRelease` also checks unsigned AAB packaging at `app/build/outputs/bundle/release/app-release.aab`; do not upload the disposable prototype to Play as the production app. Debug keys are disposable and must not become production keys. CI debug keys may differ between runners, so CI artifacts cannot establish same-key updates; use the same local debug key for repeated local prototype builds.
 
 ## Phone check (development evidence only)
 

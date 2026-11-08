@@ -25,7 +25,7 @@ jobs:
       - name: Check prototype boundary
         run: python3 ../ops/release/check-prototype-boundary.py
       - name: Test, lint and build
-        run: ./gradlew --no-daemon :core-model:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleRelease
+        run: ./gradlew --no-daemon :core-model:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleRelease :app:bundleRelease
       - name: Upload test and lint reports
         if: always()
         uses: actions/upload-artifact@v4

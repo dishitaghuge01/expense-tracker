@@ -7,6 +7,7 @@ Android-first, private-by-default household expense tracking for India.
 - [Product requirements](prd.md)
 - [Technical specification and build plan](buildplan.md)
 - [Distribution validation checklist](ops/release/distribution-validation.md)
+- [Google Play readiness and pending billing proposal](ops/release/play-readiness.md)
 
 The specifications are authoritative. Implementation follows work packages 0–8 in order. Public checkout stays closed until all release gates pass. No bank/device coverage has been verified yet.
 

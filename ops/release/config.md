@@ -9,7 +9,8 @@ Owner explicitly requested a public source repository. This overrides only the p
 - Source: https://github.com/dishitaghuge01/expense-tracker
 - Releases-only repository: not required for the selected Play launch
 - Launch channel: Google Play, selected by owner; commerce implementation blocked on Play policy verification and owner-approved revisions
-- Play Console account / SMS declaration / app-signing setup / testing eligibility: not verified
+- Play Console account: not created (owner confirmed); SMS declaration/app-signing/testing eligibility not completed
+- Public Play policy review: relevant SMS money-management exception identified; approval not granted. See `play-readiness.md` for sources, registration/testing requirements and an unapproved billing proposal.
 - Domain: owner has none; purchase deferred during local development
 
 ## Deployment identifiers — awaiting owner input / verification
@@ -36,7 +37,7 @@ Never record signing private keys or provider secrets here.
 
 ## Disposable prototype identity
 
-Owner approved a temporary application ID: `dev.expensetracker.prototype`. This is not derived from an owned domain, is not a production identity, and must not be promoted to public pilot or launch. Initial version: `0.0.1-prototype` (code 1). Debug signing is development-only; no production key has been generated. The prototype has no capture, authentication, network permission, SMS receiver or notification listener. It requests/checks SMS grants only after consent and offers static synthetic data.
+Owner approved a temporary application ID: `dev.expensetracker.prototype`. This is not derived from an owned domain, is not a production identity, and must not be promoted to public pilot or launch. Initial version: `0.0.1-prototype` (code 1); current build: `0.0.2-prototype` (code 2), process-restart probe-status fix. Redmi regression retest is deferred by owner. Debug signing is development-only; no production key has been generated. The prototype has no capture, authentication, network permission, SMS receiver or notification listener. It requests/checks SMS grants only after consent and offers static synthetic data.
 
 ## Available test hardware
 
