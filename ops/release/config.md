@@ -7,7 +7,9 @@ Status: preparation only; no deployment or verified capture coverage.
 Owner explicitly requested a public source repository. This overrides only the private-source setting in build plan §1; all data boundaries and secret-handling requirements remain unchanged.
 
 - Source: https://github.com/dishitaghuge01/expense-tracker
-- Releases-only repository: not created
+- Releases-only repository: not created; conditional on website distribution
+- Launch channel: deferred by owner (website APK or Google Play); no commerce implementation until resolved
+- Domain: owner has none; purchase deferred during local development
 
 ## Deployment identifiers — awaiting owner input / verification
 
@@ -29,7 +31,13 @@ Never record signing private keys or provider secrets here.
 - Checkout: closed; no commerce infrastructure exists.
 - Supported bank/device matrix: empty until actual-device evidence is recorded.
 - Notification capture: not enabled or verified.
-- Public pilot: production package and signing key, admin-issued licences only.
+- Public pilot: production package and channel-appropriate signing identity, admin-issued licences only; blocked on channel and identifiers.
+
+## Available test hardware
+
+Owner reports a Redmi Note 11T 5G, model 21091116AI, Android 13, build TP1A.220624.014, available for a few days. Permissions are owner-reported, not verified for our APK. No device identifier or financial data collected. Repeat selected-channel installation, grants and update checks on any replacement phone.
+
+Replacement behavior remains as specified: revoke old-device sync; restore shared records on the new phone; private history/rules/categories do not automatically migrate. CSV export is not a full backup.
 
 ## Local toolchain discovery
 

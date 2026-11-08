@@ -2,6 +2,12 @@
 
 Sources: build plan §§1, 4, 9–10; PRD §§3, 5. All checks below are pending. A checklist is not evidence that a gate passed.
 
+## Channel decision pending
+
+Owner has deferred website APK versus Google Play. The browser procedure below is conditional on the website option, not a chosen launch route. Prepare tooling and synthetic/consent tests now; finalize channel, identifiers, signing, permission eligibility and any payment-policy changes before a public pilot. Domain purchase can wait during local development. A disposable prototype application ID still requires owner approval.
+
+Available short-term device: Redmi Note 11T 5G (21091116AI), Android 13, build TP1A.220624.014. No tests performed. A replacement phone requires its own device-specific checks; no automatic private-ledger migration is promised.
+
 ## Preconditions
 
 - [ ] Confirm owner-controlled domain and derived application ID.
