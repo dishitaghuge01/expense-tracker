@@ -10,22 +10,24 @@ import dev.expensetracker.model.Inr
 import dev.expensetracker.prototype.data.EncryptedDatabaseHandle
 import dev.expensetracker.prototype.data.EncryptedRoomFactory
 
-/** First local-ledger slice, not the complete local/sync schema from the build plan. */
+/** Local ledger and inactive rule storage; cache, sync and capture remain pending. */
 @Database(
     entities = [AccountAliasEntity::class, PersonalCategoryEntity::class, PersonalBudgetEntity::class,
-        LocalTransactionEntity::class, CaptureObservationEntity::class],
-    version = 1,
+        LocalTransactionEntity::class, CaptureObservationEntity::class,
+        MerchantRuleEntity::class, SharingRuleEntity::class, CorrectionUndoEntity::class, CoverageCheckEntity::class],
+    version = 2,
     exportSchema = true,
 )
 @TypeConverters(LedgerConverters::class)
 abstract class LocalLedgerDatabase : RoomDatabase() {
     abstract fun ledger(): LocalLedgerDao
+    abstract fun rules(): LocalRulesDao
 
     companion object {
         @WorkerThread
         fun open(context: Context, authenticatedSubject: String): EncryptedDatabaseHandle<LocalLedgerDatabase> =
             EncryptedRoomFactory(context).open(
-                authenticatedSubject, LocalLedgerDatabase::class.java,
+                authenticatedSubject, LocalLedgerDatabase::class.java, LedgerMigrations.FROM_1_TO_2,
                 callbacks = listOf(LedgerConstraints),
             )
     }
@@ -37,6 +39,7 @@ internal object LedgerConstraints : RoomDatabase.Callback() {
     override fun onOpen(db: SupportSQLiteDatabase) = install(db)
 
     private fun install(db: SupportSQLiteDatabase) {
+        LocalRuleConstraints.install(db)
         for (operation in listOf("INSERT", "UPDATE")) {
             val suffix = operation.lowercase(java.util.Locale.ROOT)
             db.execSQL("""CREATE TRIGGER IF NOT EXISTS category_active_name_$suffix

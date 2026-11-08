@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import dev.expensetracker.model.ReportingDates
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -85,6 +86,8 @@ data class CoverageCheckEntity(
     val confirmedAt: Instant? = null,
 ) {
     init {
+        ReportingDates.parseDate(fromDate.toString())
+        ReportingDates.parseDate(toDate.toString())
         require(!fromDate.isAfter(toDate)) { "INVALID_COVERAGE_RANGE" }
         requireDigest(statementDigest)
         require(rowCount in 0..10_000 && matchedCount >= 0 && newCount >= 0 && unresolvedCount >= 0 &&
