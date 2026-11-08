@@ -14,20 +14,23 @@ import dev.expensetracker.prototype.data.EncryptedRoomFactory
 @Database(
     entities = [AccountAliasEntity::class, PersonalCategoryEntity::class, PersonalBudgetEntity::class,
         LocalTransactionEntity::class, CaptureObservationEntity::class,
-        MerchantRuleEntity::class, SharingRuleEntity::class, CorrectionUndoEntity::class, CoverageCheckEntity::class],
-    version = 2,
+        MerchantRuleEntity::class, SharingRuleEntity::class, CorrectionUndoEntity::class, CoverageCheckEntity::class,
+        LocalSettingsEntity::class, BudgetAlertEntity::class],
+    version = 3,
     exportSchema = true,
 )
 @TypeConverters(LedgerConverters::class)
 abstract class LocalLedgerDatabase : RoomDatabase() {
     abstract fun ledger(): LocalLedgerDao
     abstract fun rules(): LocalRulesDao
+    abstract fun preferences(): LocalPreferencesDao
 
     companion object {
         @WorkerThread
         fun open(context: Context, authenticatedSubject: String): EncryptedDatabaseHandle<LocalLedgerDatabase> =
             EncryptedRoomFactory(context).open(
-                authenticatedSubject, LocalLedgerDatabase::class.java, LedgerMigrations.FROM_1_TO_2,
+                authenticatedSubject, LocalLedgerDatabase::class.java,
+                LedgerMigrations.FROM_1_TO_2, LedgerMigrations.FROM_2_TO_3,
                 callbacks = listOf(LedgerConstraints),
             )
     }
@@ -40,6 +43,7 @@ internal object LedgerConstraints : RoomDatabase.Callback() {
 
     private fun install(db: SupportSQLiteDatabase) {
         LocalRuleConstraints.install(db)
+        LocalPreferencesConstraints.install(db)
         for (operation in listOf("INSERT", "UPDATE")) {
             val suffix = operation.lowercase(java.util.Locale.ROOT)
             db.execSQL("""CREATE TRIGGER IF NOT EXISTS category_active_name_$suffix

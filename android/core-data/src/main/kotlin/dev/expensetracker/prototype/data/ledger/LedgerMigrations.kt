@@ -5,6 +5,23 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** Additive development migration: all v1 rows, labels, metadata and triggers remain untouched. */
 object LedgerMigrations {
+    val FROM_2_TO_3: Migration = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("""CREATE TABLE IF NOT EXISTS local_settings (
+                id INTEGER NOT NULL PRIMARY KEY,
+                liveSmsOptIn INTEGER NOT NULL DEFAULT 0, historyOptIn INTEGER NOT NULL DEFAULT 0,
+                notificationsOptIn INTEGER NOT NULL DEFAULT 0, capturePaused INTEGER NOT NULL DEFAULT 0,
+                selectedPacks TEXT NOT NULL, sourceHealth TEXT NOT NULL, localLockEnabled INTEGER NOT NULL,
+                historyScan TEXT, lastCheckAt TEXT)""")
+            // The composite PK also indexes the scope/category/month threshold lookup.
+            db.execSQL("""CREATE TABLE IF NOT EXISTS budget_alerts (
+                scope TEXT NOT NULL, categoryId TEXT NOT NULL, month TEXT NOT NULL,
+                threshold INTEGER NOT NULL, emittedAt TEXT NOT NULL,
+                PRIMARY KEY(scope, categoryId, month, threshold))""")
+            LocalPreferencesConstraints.install(db)
+        }
+    }
+
     val FROM_1_TO_2: Migration = object : Migration(1, 2) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("""CREATE TABLE IF NOT EXISTS merchant_rule (
