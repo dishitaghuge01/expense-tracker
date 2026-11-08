@@ -53,6 +53,7 @@ class LocalPreferencesDeviceTest {
         assertEquals(0, dao.setLocalLock(false, false))
         assertEquals(0, dao.recordSourceHealth(health(CaptureSource.LIVE_SMS)))
         assertEquals(0, dao.setHistoryScan(progress()))
+        assertEquals(0, dao.setHistoryScan(null))
         assertEquals(0, dao.setLastCheckAt(now))
         assertNull(dao.settings())
     }
@@ -117,6 +118,19 @@ class LocalPreferencesDeviceTest {
         val old = dao.settings()!!
         assertEquals(1, dao.setCapturePaused(false))
         assertEquals(old.copy(capturePaused = false), dao.settings())
+        val unpaused = dao.settings()!!
+        assertEquals(1, dao.setPresetPacks(listOf(PresetPack.SELF_EMPLOYED)))
+        assertEquals(unpaused.copy(selectedPacks = listOf(PresetPack.SELF_EMPLOYED)), dao.settings())
+        val packed = dao.settings()!!
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { dao.setPresetPacks(listOf(PresetPack.STUDENT, PresetPack.STUDENT)) }
+        }
+        assertEquals(packed, dao.settings())
+        assertEquals(1, dao.setLastCheckAt(now.plusNanos(1)))
+        assertEquals(packed.copy(lastCheckAt = now.plusNanos(1)), dao.settings())
+        val checked = dao.settings()!!
+        assertEquals(1, dao.setLocalLock(false, true))
+        assertEquals(checked.copy(localLockEnabled = false), dao.settings())
     }
 
     @Test fun concurrentHealthReplacementAndScanCheckpointsDoNotEnablePermissionsOrConsent() = withDatabase { subject, db ->
