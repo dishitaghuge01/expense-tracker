@@ -1,6 +1,6 @@
 # Encrypted storage foundation
 
-Implements the storage boundary in build plan §4 using Room 2.8.3, SQLCipher for Android 4.20.0 and Android Keystore. The Compose prototype does **not** open a database or capture alerts yet. The nine-table development ledger/rules slice is implemented; this is not the completed v1 product storage work package.
+Implements the storage boundary in build plan §4 using Room 2.8.3, SQLCipher for Android 4.20.0 and Android Keystore. The Compose prototype does **not** open a database or capture alerts yet. The eleven-table development ledger/rules/preferences slice is implemented; this is not the completed v1 product storage work package.
 
 ## Implemented
 
@@ -14,7 +14,7 @@ Implements the storage boundary in build plan §4 using Room 2.8.3, SQLCipher fo
 
 ## Ledger schema and DAOs
 
-`ledger/LocalLedgerDatabase` development version 2 adds `merchant_rule`, `sharing_rule`, `correction_undo` and `coverage_check` to version 1's `account_alias`, `personal_category`, `personal_budget`, `local_transaction` and `capture_observation`. The explicit additive `LedgerMigrations.FROM_1_TO_2` leaves old tables/data/triggers intact; the frozen v1 schema export is retained. Open it through `LocalLedgerDatabase.open` so its constraint callbacks are installed alongside encryption. UUID/date/month/UTC-nanosecond converters preserve canonical values; instants use fixed nine-digit fractions for correct text ordering.
+`ledger/LocalLedgerDatabase` development version 3 adds `local_settings` and `budget_alerts` to version 2's merchant/sharing rules, typed undo and coverage tables, and version 1's `account_alias`, `personal_category`, `personal_budget`, `local_transaction` and `capture_observation`. The explicit additive `FROM_1_TO_2` and `FROM_2_TO_3` migration chain leaves old tables/data/triggers intact; frozen v1/v2 exports are retained. Open it through `LocalLedgerDatabase.open` so its constraint callbacks are installed alongside encryption. UUID/date/month/UTC-nanosecond converters preserve canonical values; instants use fixed nine-digit fractions for correct text ordering.
 
 The DAO atomically records a normalized event and its observation, rejects non-private initial records, and treats fingerprint replay idempotently without overwriting corrections. Different IDs remain distinct. Category edits/exclusion use version checks, never mutate amount/date, and do not enqueue changes to an existing share. There is no blank transaction-entry UI or generic transaction update DAO.
 
@@ -22,12 +22,14 @@ Triggers enforce integer amount bounds, captured amount/date immutability and ac
 
 `LocalRulesDao` stores future merchant rules without modifying past records, prefers exact account scopes, and returns all enabled exact sharing matches without resolving category conflicts or sharing anything. Initial sharing rules default disabled. Coverage confirmation is a separate digest-bound operation requiring zero unresolved rows; saving coverage never verifies a period automatically. Undo operations are insert-only, expire within 24 hours and use strict typed JSON containing only category inverse changes and rule snapshots—not arbitrary alert fields. Undo application and scheduled expiry cleanup are not implemented yet.
 
-The prototype does not instantiate this database. Household cache, outbox/sync, settings and budget-alert tables remain to be implemented. The full v1 storage deliverable is incomplete; add explicit migrations for existing development databases as this schema evolves rather than enabling destructive fallback.
+`LocalPreferencesDao` initializes settings only when explicitly requested, with capture opt-ins off and an explicit device-screen-lock-dependent default. Reinitializing preserves choices; missing-row setters do not create settings. Typed packs, cached permission health and <=90-day scan checkpoints carry no raw alerts and cannot grant activation. List UPDATEs explicitly bind a single encoded JSON cell. Budget markers include ledger kind plus identity, category, month and threshold; insert-ignore keeps the first emitted timestamp and prevents duplicates. No notification delivery or scheduling is implemented.
+
+The prototype does not instantiate this database. Household cache and outbox/sync tables remain to be implemented. The full v1 storage deliverable is incomplete; add explicit migrations for existing development databases as this schema evolves rather than enabling destructive fallback.
 
 ## Tests
 
-- 22 passing JVM tests: eight ledger-value/converter tests, eight rule/coverage/strict undo-JSON tests and six AES-GCM envelope tests. These do not emulate Android Keystore.
-- 23 compiled Android tests: seven vault/native SQLCipher cases, eight baseline Room cases, seven rule/undo/coverage cases and one encrypted frozen-v1-to-v2 migration case. They use generated synthetic data only. Zero have been executed on Android; device execution is deferred at the owner's request. Do not claim encrypted Room integration is device-verified yet.
+- 32 passing JVM tests: eight ledger-value/converter tests, eight rule/coverage/strict undo-JSON tests, ten preferences/health/checkpoint/scope tests and six AES-GCM envelope tests. These do not emulate Android Keystore.
+- 31 compiled Android tests: seven vault/native SQLCipher cases, eight baseline Room cases, seven rule/undo/coverage cases, seven preferences/marker cases and two encrypted frozen-old-schema migration cases (v1 and v2 through the current chain). They use generated synthetic data only. Zero have been executed on Android; device execution is deferred at the owner's request. Do not claim encrypted Room integration is device-verified yet.
 - `ops/release/check-room-schema.py` verifies the exported field allowlist, integer affinities, keys/FKs and synthetic in-memory SQLite DDL. This is not a substitute for the Android encryption/trigger tests.
 
 ```sh
