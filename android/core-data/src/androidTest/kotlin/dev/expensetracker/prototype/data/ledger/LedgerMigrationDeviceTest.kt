@@ -54,15 +54,15 @@ class LedgerMigrationDeviceTest {
                 db.execSQL("INSERT INTO account_alias VALUES (?,?,?,?,?,?,?)", arrayOf(account.toString(), "SBI", "bank", "1234", "Synthetic salary", "active", timestamp))
                 db.execSQL("INSERT INTO personal_category VALUES (?,?,?,?)", arrayOf(category.toString(), "groceries", "Synthetic Café", null))
                 db.execSQL("INSERT INTO personal_category VALUES (?,?,?,?)", arrayOf(archived.toString(), null, "Old synthetic label", timestamp))
-                db.execSQL("INSERT INTO personal_budget VALUES (?,?,?,?)", arrayOf(category.toString(), "2026-11", 123456L, timestamp))
+                db.execSQL("INSERT INTO personal_budget VALUES (?,?,?,?)", arrayOf<Any?>(category.toString(), "2026-11", 123456L, timestamp))
                 db.execSQL("""INSERT INTO local_transaction
                     (id,accountId,amountPaise,kind,reportDate,occurredAt,observedAt,dateSource,merchantLabel,categoryId,
                     beneficiaryLabel,localReferenceDigest,confidence,reasonCode,status,refundOfId,localVersion,sharedId,
                     shareVersion,shareState,createdAt,updatedAt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                    arrayOf(transaction.toString(), account.toString(), 85000L, "expense", "2026-11-08", timestamp,
+                    arrayOf<Any?>(transaction.toString(), account.toString(), 85000L, "expense", "2026-11-08", timestamp,
                         timestamp, "event", "Synthetic Café", category.toString(), "Household", "b".repeat(64), "high",
                         "SYNTHETIC", "confirmed", null, 7L, shared.toString(), 3L, "shared", timestamp, timestamp))
-                db.execSQL("INSERT INTO capture_observation VALUES (?,?,?,?,?,?,?,?,?)", arrayOf("a".repeat(64), transaction.toString(), "sms", "synthetic.v1", 1, timestamp, "SBI", "captured", "SYNTHETIC"))
+                db.execSQL("INSERT INTO capture_observation VALUES (?,?,?,?,?,?,?,?,?)", arrayOf<Any?>("a".repeat(64), transaction.toString(), "sms", "synthetic.v1", 1, timestamp, "SBI", "captured", "SYNTHETIC"))
                 // An independently named old trigger detects destructive reconstruction even if rows are copied.
                 db.execSQL("""CREATE TRIGGER synthetic_v1_sentinel BEFORE DELETE ON account_alias
                     BEGIN SELECT RAISE(ABORT, 'SYNTHETIC_V1_SENTINEL'); END""")
