@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.serialization)
 }
 android {
     namespace = "dev.expensetracker.prototype.data"
@@ -22,6 +23,7 @@ dependencies {
     implementation(project(":core-model"))
     implementation(libs.androidx.room.runtime)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.sqlite)
     implementation(libs.sqlcipher)
