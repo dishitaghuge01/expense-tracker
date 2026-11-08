@@ -8,12 +8,14 @@ Android-first, private-by-default household expense tracking for India.
 - [Technical specification and build plan](buildplan.md)
 - [Distribution validation checklist](ops/release/distribution-validation.md)
 - [Google Play readiness and approved billing model](ops/release/play-readiness.md)
+- [Three-agent development workflow](ops/runbooks/development-agents.md)
+- [Independent rules-storage verification](ops/release/rules-storage-verification.md)
 
 The specifications are authoritative. Implementation follows work packages 0–8 in order. Public checkout stays closed until all release gates pass. No bank/device coverage has been verified yet.
 
 ## Current status
 
-Work package 0: disposable Android prototype with a fictional demo and consent-only SMS grant probe. See [Android build and phone-check instructions](android/README.md). The [pure Kotlin foundation](android/core-model/README.md) includes exact INR conversion/formatting, strict IST reporting dates, scoped monthly accounting and fail-closed consent states. The [encrypted storage foundation](android/core-data/README.md) adds Keystore-wrapped secrets, a non-destructive SQLCipher/Room opener and the first five-table local ledger slice with DAOs/schema export. The remaining Room tables/migrations and device validation are pending. No real capture, backend, checkout, or deployed website exists yet. Google Play is the selected launch channel. Domain and production identifiers remain deferred; the free-install/one-time Play Billing model is approved, initially ₹499 with future Play Console price changes allowed. Play permission eligibility, detailed billing contracts and revised budget/spend remain gated. A prototype install does not satisfy public distribution gates.
+Work package 0: disposable Android prototype with a fictional demo and consent-only SMS grant probe. See [Android build and phone-check instructions](android/README.md). The [pure Kotlin foundation](android/core-model/README.md) includes exact INR conversion/formatting, strict IST reporting dates, scoped monthly accounting and fail-closed consent states. The [encrypted storage foundation](android/core-data/README.md) adds Keystore-wrapped secrets, a non-destructive SQLCipher/Room opener and a nine-table development ledger/rules/undo/coverage slice with an additive migration, DAOs and schema exports. The remaining Room tables/migrations and device validation are pending. No real capture, backend, checkout, or deployed website exists yet. Google Play is the selected launch channel. Domain and production identifiers remain deferred; the free-install/one-time Play Billing model is approved, initially ₹499 with future Play Console price changes allowed. Play permission eligibility, detailed billing contracts and revised budget/spend remain gated. A prototype install does not satisfy public distribution gates.
 
 The source repository is public at the owner's explicit request, overriding the private-source setting in the build plan. Signed APKs will use a separate public releases-only repository.
 
