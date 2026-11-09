@@ -10,6 +10,7 @@ on:
       - 'deno.json'
       - 'deno.lock'
       - 'ops/tooling/**'
+      - 'ops/tests/**'
       - '.github/workflows/backend.yml'
   pull_request:
     paths:
@@ -20,6 +21,7 @@ on:
       - 'deno.json'
       - 'deno.lock'
       - 'ops/tooling/**'
+      - 'ops/tests/**'
       - '.github/workflows/backend.yml'
   workflow_dispatch:
 permissions:
@@ -27,7 +29,8 @@ permissions:
 jobs:
   local-backend:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    # Up to 20 minutes for both bounded cold downloads, plus backend checks/cleanup.
+    timeout-minutes: 45
     defaults:
       run:
         shell: bash
@@ -35,8 +38,19 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Run offline bootstrap fault-injection tests
+        timeout-minutes: 3
+        run: python3 -m unittest discover -s ops/tests -p 'test_backend_bootstrap.py' -v
+      - name: Cache pinned release archives only (installer rechecks SHA-256)
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            .tools/backend/downloads/deno-*-linux-x86_64.zip
+            .tools/backend/downloads/supabase-*-linux-amd64.tar.gz
+          key: ${{ runner.os }}-${{ runner.arch }}-backend-archives-v1-${{ hashFiles('ops/tooling/backend-versions.env') }}
       - name: Install checksum-pinned local tooling
         id: install_tooling
+        timeout-minutes: 21
         run: bash ops/tooling/install-backend.sh
       - name: Install locked dependencies (no lifecycle scripts)
         run: |
