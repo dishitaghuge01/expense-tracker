@@ -39,7 +39,21 @@ deno install --frozen --entrypoint ops/tooling/validate-contracts.ts
 Installation downloads only tooling, never starts Docker, runs project checks or
 executes downloaded binaries as verification. It does not grant npm lifecycle
 scripts. Sources remain the pinned official GitHub releases; failures never
-substitute a version, checksum, provider or mirror.
+substitute a version, checksum, provider or mirror. Delivery uses GitHub's
+[documented release-asset API](https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#get-a-release-asset)
+for those same exact archives:
+
+- Deno: `https://api.github.com/repos/denoland/deno/releases/assets/662551650`
+  (`deno-x86_64-unknown-linux-gnu.zip`, release `v2.9.8`).
+- Supabase: `https://api.github.com/repos/supabase/cli/releases/assets/701653806`
+  (`supabase_3.0.0_linux_amd64.tar.gz`, release `v3.0.0`).
+
+The asset IDs are pinned in `backend-versions.env`, with official tag-metadata
+provenance; there is no runtime latest lookup or URL override. Requests explicitly
+send `Accept: application/octet-stream` and `X-GitHub-Api-Version: 2022-11-28`,
+without authentication. Redirects use normal `--location`, not credential-trusting
+redirects or TLS bypass. Full-archive SHA-256 verification remains mandatory;
+an HTTP 200 JSON/error body cannot become a cache entry or installed tool.
 
 ### Archive cache and bounded retries
 
@@ -237,7 +251,16 @@ tests, 58 pgTAP assertions, reset/migrations, loopback bindings and the recorded
 live release/anonymous nonexposure probes. See [verification evidence](../release/backend-foundation-verification.md)
 for exact sources, failed-attempt history and limits. Latest observed backend CI
 at `25d86d6` failed on an external HTTP 504 tool download; the resilience changes
-have not yet established a backend CI pass. Android CI separately recovered at
+have not yet established a backend CI pass. Independent verification at
+`8c022b7` passed the original 23 offline bootstrap tests, but the real cold
+installer exhausted three browser-release-URL attempts with HTTP 504. A separate
+single-attempt diagnostic for each official asset API URL returned HTTP 200, but
+both transfers timed out after 180 seconds with incomplete, nonmatching hashes;
+neither archive was verified, extracted or executed. Separate 1,024-byte range
+diagnostics are not full-archive proof. The installer now uses the API route for
+the same pinned assets; independent execution of this change, a checksum-verified
+cold/warm bootstrap and actual backend CI success remain pending. This is not a
+claim of outage recovery. Android CI separately recovered at
 `37ba265` ([green run 42570266300](https://github.com/dishitaghuge01/expense-tracker/actions/runs/42570266300)).
 Local success is not a backend CI pass. Package 1 still needs staging
 prerequisites/provisioning/deployment (separate owner authorization), web tooling,

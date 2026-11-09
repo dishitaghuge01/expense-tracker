@@ -63,6 +63,8 @@ ensure_archive() {
     # Disable curlrc and internal retries: one bounded invocation per attempt.
     if status="$(curl --disable --fail --location --silent --show-error \
       --connect-timeout 20 --max-time 180 --retry 0 --write-out '%{http_code}' \
+      --header 'Accept: application/octet-stream' \
+      --header 'X-GitHub-Api-Version: 2022-11-28' \
       "$url" -o "$download_tmp")"; then
       result=0
     else
@@ -113,9 +115,9 @@ ensure_archive() {
 check_existing_cache "$deno_archive" "$DENO_LINUX_X64_SHA256"
 check_existing_cache "$supabase_archive" "$SUPABASE_LINUX_X64_SHA256"
 ensure_archive "$deno_archive" "$DENO_LINUX_X64_SHA256" \
-  "https://github.com/denoland/deno/releases/download/v$DENO_VERSION/deno-x86_64-unknown-linux-gnu.zip" Deno
+  "https://api.github.com/repos/denoland/deno/releases/assets/$DENO_GITHUB_ASSET_ID" Deno
 ensure_archive "$supabase_archive" "$SUPABASE_LINUX_X64_SHA256" \
-  "https://github.com/supabase/cli/releases/download/v$SUPABASE_VERSION/supabase_${SUPABASE_VERSION}_linux_amd64.tar.gz" Supabase
+  "https://api.github.com/repos/supabase/cli/releases/assets/$SUPABASE_GITHUB_ASSET_ID" Supabase
 
 # Neither installed binary is touched until both archives verify and extract.
 mkdir "$tmp/deno" "$tmp/supabase"
