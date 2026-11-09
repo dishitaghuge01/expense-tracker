@@ -10,7 +10,7 @@ Implements the storage boundary in build plan §4 using Room 2.8.3, SQLCipher fo
 - Wrapping does not require a biometric prompt; background access and the eventual UI lock are independent as specified.
 - `EncryptedRoomFactory`: caller-supplied Room class and explicit migrations, SQLCipher native initialization, foreign keys enabled, no destructive-migration fallback and immediate opening/key/schema verification. Run on a worker thread. Keep the returned handle alive while using the database, then close it to clear the retained factory secret.
 - `PreservingCipherFactory`: uses SQLCipher's SQLiteOpenHelper/Room interface with an explicit non-deleting corruption handler. Upstream's default adapter supplies a null handler, which can invoke destructive corruption recovery. Minimum-supported-version deletion is disabled (zero).
-- SQLCipher Java logging is disabled and core cipher logging is set to none on open. JNI/library log behavior still needs device privacy review before release; this is not a completed dependency audit.
+- SQLCipher Java logging is disabled and core cipher logging is disabled with a checked `PRAGMA cipher_log = 'off'` query on open. This setter returns a row: do not use `execSQL` or the destination `none`. JNI/library log behavior still needs a full privacy review before release; this is not a completed dependency audit.
 
 ## Ledger schema and DAOs
 
@@ -29,18 +29,20 @@ The prototype does not instantiate this database. Household cache and outbox/syn
 ## Tests
 
 - 32 passing JVM tests: eight ledger-value/converter tests, eight rule/coverage/strict undo-JSON tests, ten preferences/health/checkpoint/scope tests and six AES-GCM envelope tests. These do not emulate Android Keystore.
-- 31 compiled Android tests: seven vault/native SQLCipher cases, eight baseline Room cases, seven rule/undo/coverage cases, seven preferences/marker cases and two encrypted frozen-old-schema migration cases (v1 and v2 through the current chain). They use generated synthetic data only. Zero have been executed on Android; device execution is deferred at the owner's request. Do not claim encrypted Room integration is device-verified yet.
+- 36 Android tests executed and passed on an owner-authorized Redmi Android 13 phone: seven vault/native SQLCipher cases, eight baseline Room cases, seven rule/undo/coverage cases, seven preferences/marker cases, two encrypted frozen-old-schema migration cases, and five new Room-open isolation/regression cases. The first run found 24 Room-open failures; the reviewed logging-PRAGMA repair and unchanged original tests then passed. Synthetic data only; one-device evidence, not an OEM/Android matrix. See [independent device evidence](../../ops/release/device-storage-verification.md).
 - `ops/release/check-room-schema.py` verifies the exported field allowlist, integer affinities, keys/FKs and synthetic in-memory SQLite DDL. This is not a substitute for the Android encryption/trigger tests.
 
 ```sh
 # From android/, with the documented Java/SDK environment
 ./gradlew :core-data:testDebugUnitTest :core-data:assembleDebugAndroidTest
-# Only when an authorized device is connected and installation is convenient:
-./gradlew :core-data:connectedDebugAndroidTest
+# Phone execution requires arranging installation with the owner.
+# Do not use connectedDebugAndroidTest unattended: its runner collects broad logcat.
+# Use reviewed, identifier-redacted direct instrumentation as documented in:
+# ../../ops/release/device-storage-verification.md
 ```
 
 ## Still required
 
-Remaining Room tables/DAOs and migrations, account/session composition, explicit wipe/reactivation UI, key-loss/backup device validation and execution of the compiled Room/SQLCipher integration tests remain pending. This partial development schema is not the completed product database. Never introduce an unencrypted fallback or destructive recovery to make a test pass.
+Remaining Room tables/DAOs and migrations, account/session composition, explicit wipe/reactivation UI, key-loss/backup device validation and broader device/release/privacy validation remain pending. This partial development schema is not the completed product database. Never introduce an unencrypted fallback or destructive recovery to make a test pass.
 
-Source references reviewed: [SQLCipher Android integration](https://github.com/sqlcipher/sqlcipher-android), including `SupportHelper`, `SQLiteOpenHelper` and `DatabaseErrorHandler` behavior. Native encrypted-file tests must pass before this layer is connected to private payment records.
+Source references reviewed: [SQLCipher Android integration](https://github.com/sqlcipher/sqlcipher-android), including `SupportHelper`, `SQLiteOpenHelper` and `DatabaseErrorHandler` behavior. Native encrypted-file tests passed on the recorded phone; this layer remains disconnected from private payment records pending the other activation, privacy and product gates.

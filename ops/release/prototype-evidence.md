@@ -2,6 +2,8 @@
 
 This is development evidence, not completion of work package 0 or any public-launch gate.
 
+**Later verification:** the owner subsequently authorized phone tests. The first synthetic Room run found a real opening defect; after the reviewed repair, all 36 Android tests and 78 JVM tests passed at `0e31039`. See [device storage verification](device-storage-verification.md). Counts/deferrals and artifact hashes below describe their historical checkpoints; they are not the latest device status. The prototype app itself was not updated on the phone.
+
 ## Original build verification (historical)
 
 - Application ID `dev.expensetracker.prototype`, code 1, version `0.0.1-prototype`.

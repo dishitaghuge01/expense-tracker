@@ -1,16 +1,21 @@
 # Session handover — read before resuming
 
-## 1. Stop point and owner instructions
+## 1. Current owner instructions and resumed work
 
-**Coding is paused for this handover. Do not automatically start more package-2 work.** The owner asked for a new-session handover before proceeding into package 2, believing we were still in package 1.
+**The owner authorized continuing work on the missing package-1 prerequisites and explicitly connected the phone for debugging.** The earlier handover pause and phone-test deferral are lifted for this agreed work. This is not blanket authorization for unattended installs, spending, cloud provisioning or advancing new package-2 features.
 
-Actual status: packages **0 and 1 are incomplete**, and **some package-2 foundation code has already been built** as prototype groundwork. This is not a completed package-1 checkpoint or proof that external gates passed. Preserve the working foundations; do not roll them back or relabel the packages complete. First reconcile the outstanding package-0/1 tasks with the owner before advancing further.
+Packages **0 and 1 remain incomplete**; preserve the existing partial package-2 foundations. Current-session changes:
+- Added local Supabase/security/seed scaffolding, pinned Deno/Supabase tooling, a Play-adjusted public release-metadata handler, partial OpenAPI/fixtures, independent tests and backend CI. No commerce, auth/household business features, website or staging deployment. See `ops/runbooks/local-backend.md`; integrated backend verification is tracked separately from Android.
+- Actual phone execution at `0947c36` exposed **24 failures out of 31 tests** in the Room opener. Separate agents repaired SQLCipher's row-returning logging PRAGMA (`query`, destination `off`, checked status) and added five independent regressions.
+- At **`0e31039`**, independent verification passed **78 JVM tests and all 36 actual Android tests** (original 31 + new five), lint/builds and unchanged schemas/locks. See `ops/release/device-storage-verification.md`. Only the separate synthetic library-test APK was installed; the prototype app and SMS were untouched. Test APK remains installed. No logcat or phone identifiers were persisted.
+
+Sections 3–10 below retain the **previous handover snapshot**, not current verification status. In particular, their claims of zero executed Android tests, no backend scaffold, all changes pushed and paused coding are historical. Use this section and linked current verification documents before relying on those statements.
 
 Standing requirements:
 - Follow `prd.md` and `buildplan.md`; ask before changing approaches or sequence. Do not change unrelated files.
 - Walk the owner through meaningful steps, make small scoped commits, and push reviewed work.
 - Use **three separate agents**: implementation, independent test writing, independent execution/verification. The coordinator reviews/integrates; a verifier does not fix code/tests to make them pass.
-- Further phone/user tests are **deferred at the owner's request**. Do not trigger installs, prompts or connected tests without arranging them first.
+- The owner authorized the recorded connected-phone tests. Arrange future installs/prompts first. Avoid Gradle connected tests: its default runner collects broad logcat; use reviewed, identifier-redacted direct instrumentation instead.
 - No raw production SMS/statements, credentials, signing private keys or phone identifiers in Git/logs/support reports. No spending or cloud provisioning is implied by permission to code.
 
 ## 2. Read order
@@ -23,7 +28,7 @@ Standing requirements:
 
 The specifications govern product requirements; progress notes do not override them. Several retained Razorpay/website sections are explicitly **superseded reference**, not active implementation instructions.
 
-## 3. Repository / verified snapshot
+## 3. Repository / verified snapshot (historical; see current §1)
 
 - Public source repo (explicit owner override of original private-source plan): https://github.com/dishitaghuge01/expense-tracker
 - Branch: `main`; all product changes pushed.
