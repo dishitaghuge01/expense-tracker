@@ -36,10 +36,58 @@ source ops/tooling/backend-env.sh
 deno install --frozen --entrypoint ops/tooling/validate-contracts.ts
 ```
 
-Installation downloads only tooling/dependencies, never starts Docker or executes
-project checks. It does not grant npm lifecycle scripts. The installer has bounded
-download timeouts/retries, fails on checksum/network errors and does not fall back
-to another provider/version. A failed partial download is not an installation.
+Installation downloads only tooling, never starts Docker, runs project checks or
+executes downloaded binaries as verification. It does not grant npm lifecycle
+scripts. Sources remain the pinned official GitHub releases; failures never
+substitute a version, checksum, provider or mirror.
+
+### Archive cache and bounded retries
+
+Only release archives are reusable bootstrap cache entries, under ignored paths:
+
+- `.tools/backend/downloads/deno-2.9.8-linux-x86_64.zip`
+- `.tools/backend/downloads/supabase-3.0.0-linux-amd64.tar.gz`
+
+Every existing entry is SHA-256 checked against `backend-versions.env`, on every
+invocation, before extraction/use. Two valid cache hits need **zero network
+requests**. Binaries, CLI state, credentials and dependency/user caches are not
+this archive cache and are not trusted instead of archive verification.
+
+For each uncached archive, there are at most **three attempts**, one curl process
+per attempt, with internal retries disabled (`--retry 0`) and curlrc disabled.
+Each attempt uses `--connect-timeout 20 --max-time 180` and
+`--fail --location --silent --show-error`, keeping default TLS verification.
+Transient HTTP **408, 429 and 5xx** responses retry; transport errors **5, 6, 7,
+16, 18, 28, 35, 52, 55, 56 and 92** retry unless a permanent HTTP 4xx response was
+received. Backoff is exactly **15 seconds then 45 seconds**, with no sleep after
+the last failure. Permanent HTTP errors (including 403/404), certificate trust
+failure (curl 60), other unclassified failures and checksum mismatches fail
+immediately. Exhausted retries return nonzero. Cold network/backoff budget is
+at most **600 seconds per archive / 20 minutes for both**, excluding local
+hashing/extraction/filesystem work. This cannot guarantee a successful cold
+bootstrap during a sustained upstream outage.
+
+Downloads go to private unique temporary files on the cache filesystem; only
+fully downloaded, checksum-verified bytes are atomically renamed into the cache.
+Partial/error bodies and installation staging files are cleaned up on ordinary
+exit and handled INT/TERM signals (not uncatchable SIGKILL). A verified first
+archive remains reusable if the second fails.
+Both archives must verify and extract before either installed executable is
+replaced. Staged executable files are prepared first, then replaced using
+same-directory atomic renames, never in-place truncation.
+
+**A corrupt cache fails closed before any network request**, without deleting
+the cache or changing installed binaries. Inspect the checksum failure privately
+and compare with the reviewed pins. If deliberate redownload is appropriate,
+remove **only the exact corrupt archive path reported**, for example (Deno only):
+
+```sh
+rm -- .tools/backend/downloads/deno-2.9.8-linux-x86_64.zip
+bash ops/tooling/install-backend.sh
+```
+
+Do not remove installed executables to repair an archive cache error, clear the
+whole tool directory, bypass verification or change pins to match bad bytes.
 Binaries, caches and private local output live in ignored `.tools/` per checkout.
 Source `backend-env.sh` in each new shell; do not use an unrelated system Deno.
 The wrapper invokes the pinned Supabase binary by absolute path.
@@ -103,6 +151,7 @@ issues or CI artifacts. There are no production credentials in configuration.
 After installing dependencies and integrating the independent test commits:
 
 ```sh
+python3 -m unittest discover -s ops/tests -p 'test_backend_bootstrap.py' -v
 source ops/tooling/backend-env.sh
 deno task check          # typecheck source, contract tooling and independent tests
 deno task contracts      # structural OpenAPI + response JSON Schema + fixture alignment
@@ -128,10 +177,20 @@ notes, then use `deno install --frozen=false --entrypoint
 ops/tooling/validate-contracts.ts`, review `deno.lock`, commit and independently
 verify again. Do not regenerate locks just to hide failed verification.
 
-`.github/workflows/backend.yml` is separate from Android CI. It installs pinned
-tools, installs frozen dependencies, typechecks, validates contracts, runs unit
-and contract tests, starts/reset/migrates a local synthetic stack, runs pgTAP,
-checks public Edge routing and always attempts project-local stop. It uses no
+`.github/workflows/backend.yml` is separate from Android CI. It runs the offline
+Python-stdlib bootstrap fault tests before network bootstrap, restores only the
+release archive paths via `actions/cache`, and always runs the installer to
+recheck SHA-256 even after an action cache hit. The exact cache key includes
+runner OS/architecture, bootstrap archive format `v1` and the version-pin file
+hash, with no broad restore keys. No executables, Deno/npm user caches, dotenv
+files, credentials or CLI state are cached. Cache presence is not checksum proof.
+The job has a finite 45-minute budget (21-minute installer step) to accommodate
+the bounded cold downloads plus backend checks; there is no whole-job retry loop.
+
+It installs frozen dependencies, typechecks, validates contracts, runs unit and
+contract tests, starts/reset/migrates a local synthetic stack, runs pgTAP and
+checks public Edge routing. The always-cleanup guard attempts project-local stop
+after successful tooling installation even if later steps fail. It uses no
 cloud/deployment secrets and does not publish private CLI output. CI commands are
 configured, not claimed to have passed by implementation.
 
@@ -176,8 +235,11 @@ configured, not claimed to have passed by implementation.
 Independent local execution now passed typecheck/contracts, 180 handler/contract
 tests, 58 pgTAP assertions, reset/migrations, loopback bindings and the recorded
 live release/anonymous nonexposure probes. See [verification evidence](../release/backend-foundation-verification.md)
-for exact sources, failed-attempt history and limits. CI remains blocked by
-external HTTP 504 downloads; local success is not a CI pass. Package 1 still needs staging
+for exact sources, failed-attempt history and limits. Latest observed backend CI
+at `25d86d6` failed on an external HTTP 504 tool download; the resilience changes
+have not yet established a backend CI pass. Android CI separately recovered at
+`37ba265` ([green run 42570266300](https://github.com/dishitaghuge01/expense-tracker/actions/runs/42570266300)).
+Local success is not a backend CI pass. Package 1 still needs staging
 prerequisites/provisioning/deployment (separate owner authorization), web tooling,
 full backend contracts and applicable reproducibility/signing work. Production
 identifiers, Play account/permission/testing gates, Google OAuth, signed-device
