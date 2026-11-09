@@ -36,6 +36,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install checksum-pinned local tooling
+        id: install_tooling
         run: bash ops/tooling/install-backend.sh
       - name: Install locked dependencies (no lifecycle scripts)
         run: |
@@ -69,5 +70,5 @@ jobs:
       - name: Verify dependency lock is unchanged
         run: git diff --exit-code -- deno.lock
       - name: Stop this project's local stack (preserve local volumes)
-        if: always()
+        if: ${{ always() && steps.install_tooling.outcome == 'success' }}
         run: bash ops/tooling/local-backend.sh stop
