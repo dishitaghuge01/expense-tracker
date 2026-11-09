@@ -1,0 +1,73 @@
+name: Local backend foundation
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/**'
+      - 'contracts/**'
+      - 'fixtures/release/**'
+      - 'tests/**'
+      - 'deno.json'
+      - 'deno.lock'
+      - 'ops/tooling/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - 'contracts/**'
+      - 'fixtures/release/**'
+      - 'tests/**'
+      - 'deno.json'
+      - 'deno.lock'
+      - 'ops/tooling/**'
+      - '.github/workflows/backend.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  local-backend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install checksum-pinned local tooling
+        run: bash ops/tooling/install-backend.sh
+      - name: Install locked dependencies (no lifecycle scripts)
+        run: |
+          source ops/tooling/backend-env.sh
+          deno install --frozen --entrypoint supabase/functions/api/*.ts contracts/*.ts ops/tooling/*.ts
+      - name: Typecheck backend source and independent tests
+        run: |
+          source ops/tooling/backend-env.sh
+          deno task check
+      - name: Validate OpenAPI structure and synthetic fixture
+        run: |
+          source ops/tooling/backend-env.sh
+          deno task contracts
+      - name: Run offline handler and contract tests
+        run: |
+          source ops/tooling/backend-env.sh
+          deno task test
+      - name: Start local-only Supabase
+        run: bash ops/tooling/local-backend.sh start
+      - name: Reset and migrate synthetic local database
+        run: bash ops/tooling/local-backend.sh reset
+      - name: Test database security foundation with pgTAP
+        run: |
+          source ops/tooling/backend-env.sh
+          deno task db:test
+      - name: Check local Edge routing without credentials
+        run: |
+          curl --fail --silent --show-error --retry 5 --retry-all-errors --retry-delay 2 --max-time 15 \
+            http://127.0.0.1:54321/functions/v1/api/v1/release \
+            > .tools/local-backend/release.json
+      - name: Verify dependency lock is unchanged
+        run: git diff --exit-code -- deno.lock
+      - name: Stop this project's local stack (preserve local volumes)
+        if: always()
+        run: bash ops/tooling/local-backend.sh stop
