@@ -205,8 +205,8 @@ It installs frozen dependencies, typechecks, validates contracts, runs unit and
 contract tests, starts/reset/migrates a local synthetic stack, runs pgTAP and
 checks public Edge routing. The always-cleanup guard attempts project-local stop
 after successful tooling installation even if later steps fail. It uses no
-cloud/deployment secrets and does not publish private CLI output. CI commands are
-configured, not claimed to have passed by implementation.
+cloud/deployment secrets and does not publish private CLI output. Independent
+cold and warm-cache CI executions passed at `77247e8`; see [CI evidence](../release/ci-download-verification.md).
 
 ## Security and release boundaries
 
@@ -249,20 +249,14 @@ configured, not claimed to have passed by implementation.
 Independent local execution now passed typecheck/contracts, 180 handler/contract
 tests, 58 pgTAP assertions, reset/migrations, loopback bindings and the recorded
 live release/anonymous nonexposure probes. See [verification evidence](../release/backend-foundation-verification.md)
-for exact sources, failed-attempt history and limits. Latest observed backend CI
-at `25d86d6` failed on an external HTTP 504 tool download; the resilience changes
-have not yet established a backend CI pass. Independent verification at
-`8c022b7` passed the original 23 offline bootstrap tests, but the real cold
-installer exhausted three browser-release-URL attempts with HTTP 504. A separate
-single-attempt diagnostic for each official asset API URL returned HTTP 200, but
-both transfers timed out after 180 seconds with incomplete, nonmatching hashes;
-neither archive was verified, extracted or executed. Separate 1,024-byte range
-diagnostics are not full-archive proof. The installer now uses the API route for
-the same pinned assets; independent execution of this change, a checksum-verified
-cold/warm bootstrap and actual backend CI success remain pending. This is not a
-claim of outage recovery. Android CI separately recovered at
-`37ba265` ([green run 42570266300](https://github.com/dishitaghuge01/expense-tracker/actions/runs/42570266300)).
-Local success is not a backend CI pass. Package 1 still needs staging
+for exact sources, failed-attempt history and limits. At `77247e8`, backend cold
+and verified warm-cache CI runs and Android CI all passed. The updated bootstrap
+has 24 independently verified offline test methods (41 local scenario variants).
+[CI download evidence](../release/ci-download-verification.md) preserves the earlier
+504s and local partial-transfer timeouts: those remain failed diagnostics, not
+local full-download successes. Complete cold/warm delivery was proven on GitHub.
+Sustained upstream outages can still fail after the bounded retry budget.
+Package 1 still needs staging
 prerequisites/provisioning/deployment (separate owner authorization), web tooling,
 full backend contracts and applicable reproducibility/signing work. Production
 identifiers, Play account/permission/testing gates, Google OAuth, signed-device

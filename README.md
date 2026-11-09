@@ -16,6 +16,7 @@ Android-first, private-by-default household expense tracking for India.
 - [Independent device storage verification](ops/release/device-storage-verification.md)
 - [Local backend tooling and security foundation](ops/runbooks/local-backend.md)
 - [Backend verification and remaining gates](ops/release/backend-foundation-verification.md)
+- [Verified CI download repair](ops/release/ci-download-verification.md)
 
 The specifications are authoritative. Work packages 0–8 define the intended sequence; the handover records the actual partial progress and sequencing gap. Public checkout stays closed until all release gates pass. No bank/device coverage has been verified yet.
 
