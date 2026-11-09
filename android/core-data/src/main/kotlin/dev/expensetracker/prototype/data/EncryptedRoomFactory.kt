@@ -50,7 +50,12 @@ class EncryptedRoomFactory(context: Context) {
                 .addCallback(object : RoomDatabase.Callback() {
                     override fun onOpen(db: SupportSQLiteDatabase) {
                         db.execSQL("PRAGMA foreign_keys = ON")
-                        db.execSQL("PRAGMA cipher_log = 'none'")
+                        // SQLCipher returns a status row; only 'off' disables the log destination.
+                        db.query("PRAGMA cipher_log = 'off'").use { cursor ->
+                            check(cursor.moveToFirst() && cursor.getInt(0) == 0) {
+                                "CIPHER_LOG_CONFIGURATION_FAILED"
+                            }
+                        }
                     }
                 })
                 .also { builder -> callbacks.forEach { builder.addCallback(it) } }
