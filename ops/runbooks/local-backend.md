@@ -173,8 +173,11 @@ configured, not claimed to have passed by implementation.
 
 ## Remaining gates (not completed by this slice)
 
-Independent integrated execution/CI results, Docker binding verification and
-local reset/pgTAP evidence remain verifier work. Package 1 still needs staging
+Independent local execution now passed typecheck/contracts, 180 handler/contract
+tests, 58 pgTAP assertions, reset/migrations, loopback bindings and the recorded
+live release/anonymous nonexposure probes. See [verification evidence](../release/backend-foundation-verification.md)
+for exact sources, failed-attempt history and limits. CI remains blocked by
+external HTTP 504 downloads; local success is not a CI pass. Package 1 still needs staging
 prerequisites/provisioning/deployment (separate owner authorization), web tooling,
 full backend contracts and applicable reproducibility/signing work. Production
 identifiers, Play account/permission/testing gates, Google OAuth, signed-device

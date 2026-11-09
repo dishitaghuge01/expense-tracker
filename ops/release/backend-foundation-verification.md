@@ -26,10 +26,11 @@ At `ef02547` (rerunning the earlier checks):
 - Synthetic local reset/migration/seed passed. **All 58 pgTAP assertions passed** in one rollback-only SQL test file.
 - After independent review corrected an overstrict private CORS probe, **all nine live Edge checks passed**: public GET, immutable metadata, two unreflected hostile origins, query/path errors, POST/OPTIONS/HEAD and final unchanged defaults. Gateway CORS was fixed `*` without credentials, accepted only for this local public metadata surface; production origin configuration remains gated.
 - Fixture consistency and the post-pgTAP migration/rollback audit passed.
-- **Live Data API nonexposure remains unverified:** all three groups stopped before HTTP because the harness expected the legacy status field `ANON_KEY`, unavailable in this local CLI response. An independent test-author review of pinned CLI 3's public-key interface is underway. This is not evidence that the private schema is exposed.
+- **Three separately authored keyless anonymous Data API checks passed:** public OpenAPI returned 200 without `app_private`; selecting `app_private` on the root or canary path returned 406 / `PGRST106`. All three requests and responses were observed, without Authorization, API keys or cookies. Runtime anonymous role and loopback bindings were checked.
+- The earlier key-dependent harness remains a recorded failed prerequisite: pinned CLI 3 deliberately omits public-key fields while auth is disabled. Source review established a separate keyless anonymous test strategy; no auth service, permissions or source configuration was changed and no privileged key was retrieved. This proves local anonymous nonexposure, **not authenticated/API-key/tenant isolation**. SQL role-privilege tests are separate evidence.
 - Cleanup stopped only this local project; no project containers remained. Source and locks were unchanged by verification.
 
-CI at `1161d5e` is **not green**: backend tooling downloads failed with HTTP 504 (including one identical retry); Android CI failed fetching the pinned Kotlin compiler with HTTP 504. These are external bootstrap failures, not passing test results. A minimal workflow cleanup guard was authored separately so a failed tooling installation does not cause a misleading second cleanup failure. Independent static review confirmed cleanup still runs after startup/later failure when tools installed; this is not a CI pass.
+CI is **not green**. At `1161d5e`, backend tooling downloads failed with HTTP 504 (including one identical retry), and Android CI failed fetching the pinned Kotlin compiler. Both failed again on external HTTP 504 at `25d86d6`: [backend run](https://github.com/dishitaghuge01/expense-tracker/actions/runs/42568771882), [Android run](https://github.com/dishitaghuge01/expense-tracker/actions/runs/42568770792). These are external bootstrap failures, not passing test results. A minimal workflow cleanup guard was authored separately so a failed tooling installation does not cause a misleading second cleanup failure. Independent static review confirmed cleanup still runs after startup/later failure when tools installed; this is not a CI pass.
 
 Commands (independent verifier; see the runbook for prerequisites):
 
@@ -48,6 +49,8 @@ bash ops/tooling/local-backend.sh stop
 
 Private execution reports/logs are ignored under `ops/private/agent-team/package1-foundation/`. Never publish CLI start/status logs: even local tooling can print conventional development credentials.
 
-## Remaining gates
+## Result and remaining gates
+
+The scoped **local foundation checks passed** across the independently recorded runs on unchanged runtime/tests: typechecking/contracts, 180 handler/contract tests, 58 pgTAP assertions, nine live Edge probes, three anonymous Data API probes, loopback bindings and migration/rollback audit. Source/locks stayed unchanged; each local stack was stopped with no project containers remaining. Earlier failed attempts are preserved, not rewritten as successes. No phone was needed for backend verification.
 
 Staging prerequisites/provisioning/deployment, web tooling, full non-billing backend contracts, applicable clean-build reproducibility/signing, production identifiers, Play eligibility/track tests and the Play-specific commerce contract remain incomplete. No new package-2 feature was advanced. See [local runbook](../runbooks/local-backend.md) and [device verification](device-storage-verification.md) for separate evidence and boundaries.
