@@ -21,6 +21,8 @@ node_modules/
 web/dist/
 .supabase/
 supabase/.temp/
+supabase/.branches/
+.tools/
 
 # Local machine and private operational artifacts
 .DS_Store
