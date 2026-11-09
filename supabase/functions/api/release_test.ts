@@ -65,7 +65,10 @@ async function assertError(response: Response, status: number, code?: string): P
   assert(typeof error.message === "string" && error.message.length > 0);
   if ("field" in error) assert(typeof error.field === "string");
   assertEquals(error.retryable, false);
-  if (status === 405) assertEquals(response.headers.get("allow"), "GET");
+  if (status === 405) {
+    assertEquals(error.code, "METHOD_NOT_ALLOWED");
+    assertEquals(response.headers.get("allow"), "GET");
+  }
 }
 
 for (const path of paths) {
@@ -80,6 +83,7 @@ for (const path of paths) {
   }
 
   for (const query of [
+    "?",
     "?latestBuild=999&minBuild=0&checkoutState=open",
     "?supportUrl=https%3A%2F%2Fsynthetic-untrusted-release-input.invalid",
     "?unknown=synthetic-untrusted-release-input",
