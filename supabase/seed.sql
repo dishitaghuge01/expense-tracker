@@ -1,0 +1,2 @@
+-- Intentionally empty synthetic seed: no users, business records or credentials.
+-- An empty app_private schema is the package-1 foundation, not a ledger.
