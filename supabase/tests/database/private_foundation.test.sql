@@ -95,70 +95,77 @@ select is(
 select is((select count(*)::integer from app_private.p1_test_canary_68d980c1), 1,
           'postgres can see the one synthetic canary row');
 
+-- pgTAP must keep running as the harness owner: its own functions may also
+-- inherit the revoked global EXECUTE default. Helpers switch only the probe,
+-- restore the role on both outcomes, and leave assertions outside that role.
+create function pg_temp.p1_test_sqlstate_as(actor name, command text)
+returns text language plpgsql security invoker as $$
+declare observed_state text;
+begin
+  execute format('set local role %I', actor);
+  begin
+    execute command;
+    observed_state := '00000';
+  exception when others then
+    observed_state := sqlstate;
+  end;
+  reset role;
+  return observed_state;
+end;
+$$;
+create function pg_temp.p1_test_integer_as(actor name, command text)
+returns integer language plpgsql security invoker as $$
+declare observed_value integer;
+begin
+  execute format('set local role %I', actor);
+  execute command into observed_value;
+  reset role;
+  return observed_value;
+exception when others then
+  reset role;
+  raise;
+end;
+$$;
+
 -- Real role-switched operations first demonstrate the schema boundary.
-set local role anon;
-select throws_ok('select * from app_private.p1_test_canary_68d980c1', '42501', null,
-                 'anon cannot cross private schema boundary');
-select throws_ok('create table app_private.p1_test_intruder_68d980c1 (value integer)', '42501', null,
-                 'anon cannot create private relations');
-reset role;
-set local role authenticated;
-select throws_ok('select * from app_private.p1_test_canary_68d980c1', '42501', null,
-                 'authenticated cannot cross private schema boundary');
-select throws_ok('create table app_private.p1_test_intruder_68d980c1 (value integer)', '42501', null,
-                 'authenticated cannot create private relations');
-reset role;
+select is(pg_temp.p1_test_sqlstate_as('anon', 'select * from app_private.p1_test_canary_68d980c1'), '42501',
+          'anon cannot cross private schema boundary');
+select is(pg_temp.p1_test_sqlstate_as('anon', 'create table app_private.p1_test_intruder_68d980c1 (value integer)'), '42501',
+          'anon cannot create private relations');
+select is(pg_temp.p1_test_sqlstate_as('authenticated', 'select * from app_private.p1_test_canary_68d980c1'), '42501',
+          'authenticated cannot cross private schema boundary');
+select is(pg_temp.p1_test_sqlstate_as('authenticated', 'create table app_private.p1_test_intruder_68d980c1 (value integer)'), '42501',
+          'authenticated cannot create private relations');
 
 -- Transaction-only schema access isolates object defaults from the schema deny.
 -- This is not a production/client grant: ROLLBACK restores the migrated state.
 grant usage on schema app_private to anon, authenticated;
-set local role anon;
-select throws_ok('select * from app_private.p1_test_canary_68d980c1', '42501', null,
-                 'anon SELECT still denied by default table ACL');
-select throws_ok('insert into app_private.p1_test_canary_68d980c1 values (99)', '42501', null,
-                 'anon INSERT denied');
-select throws_ok('update app_private.p1_test_canary_68d980c1 set value = 99', '42501', null,
-                 'anon UPDATE denied');
-select throws_ok('delete from app_private.p1_test_canary_68d980c1', '42501', null,
-                 'anon DELETE denied');
-select throws_ok('truncate app_private.p1_test_canary_68d980c1', '42501', null,
-                 'anon TRUNCATE denied');
-select throws_ok($$select nextval('app_private.p1_test_sequence_68d980c1')$$, '42501', null,
-                 'anon cannot advance default sequence');
-select throws_ok('select app_private.p1_test_function_68d980c1()', '42501', null,
-                 'anon cannot execute default function');
-reset role;
-set local role authenticated;
-select throws_ok('select * from app_private.p1_test_canary_68d980c1', '42501', null,
-                 'authenticated SELECT still denied by default table ACL');
-select throws_ok('insert into app_private.p1_test_canary_68d980c1 values (99)', '42501', null,
-                 'authenticated INSERT denied');
-select throws_ok('update app_private.p1_test_canary_68d980c1 set value = 99', '42501', null,
-                 'authenticated UPDATE denied');
-select throws_ok('delete from app_private.p1_test_canary_68d980c1', '42501', null,
-                 'authenticated DELETE denied');
-select throws_ok('truncate app_private.p1_test_canary_68d980c1', '42501', null,
-                 'authenticated TRUNCATE denied');
-select throws_ok($$select nextval('app_private.p1_test_sequence_68d980c1')$$, '42501', null,
-                 'authenticated cannot advance default sequence');
-select throws_ok('select app_private.p1_test_function_68d980c1()', '42501', null,
-                 'authenticated cannot execute default function');
-reset role;
+select is(pg_temp.p1_test_sqlstate_as(role_name, command), '42501', role_name || ' ' || description)
+from (values ('anon'::name), ('authenticated'::name)) as roles(role_name)
+cross join (values
+  ('select * from app_private.p1_test_canary_68d980c1', 'SELECT denied by default table ACL'),
+  ('insert into app_private.p1_test_canary_68d980c1 values (99)', 'INSERT denied'),
+  ('update app_private.p1_test_canary_68d980c1 set value = 99', 'UPDATE denied'),
+  ('delete from app_private.p1_test_canary_68d980c1', 'DELETE denied'),
+  ('truncate app_private.p1_test_canary_68d980c1', 'TRUNCATE denied'),
+  ($probe$select nextval('app_private.p1_test_sequence_68d980c1')$probe$, 'cannot advance default sequence'),
+  ('select app_private.p1_test_function_68d980c1()', 'cannot execute default function')
+) as probes(command, description);
 
 -- Prove explicit RLS denies rows independently even if SELECT were later granted.
 grant select on app_private.p1_test_canary_68d980c1 to anon, authenticated;
-set local role anon;
-select ok(row_security_active('app_private.p1_test_canary_68d980c1'::regclass),
-          'RLS is active for anon');
-select is((select count(*)::integer from app_private.p1_test_canary_68d980c1), 0,
-          'anon sees no rows with explicit RLS and no policies');
-reset role;
-set local role authenticated;
-select ok(row_security_active('app_private.p1_test_canary_68d980c1'::regclass),
-          'RLS is active for authenticated');
-select is((select count(*)::integer from app_private.p1_test_canary_68d980c1), 0,
-          'authenticated sees no rows with explicit RLS and no policies');
-reset role;
+select is(
+  pg_temp.p1_test_integer_as(role_name, $probe$select row_security_active('app_private.p1_test_canary_68d980c1'::regclass)::integer$probe$),
+  1,
+  role_name || ' has active RLS'
+)
+from (values ('anon'::name), ('authenticated'::name)) as roles(role_name);
+select is(
+  pg_temp.p1_test_integer_as(role_name, 'select count(*)::integer from app_private.p1_test_canary_68d980c1'),
+  0,
+  role_name || ' sees no rows with explicit RLS and no policies'
+)
+from (values ('anon'::name), ('authenticated'::name)) as roles(role_name);
 
 select * from finish();
 rollback;
