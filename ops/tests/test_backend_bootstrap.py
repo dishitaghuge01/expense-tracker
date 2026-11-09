@@ -27,14 +27,17 @@ import zipfile
 REPOSITORY = Path(__file__).resolve().parents[2]
 DENO_VERSION = "2.9.8"
 SUPABASE_VERSION = "3.0.0"
+# Exact assets from official tag metadata for Deno v2.9.8 / Supabase v3.0.0.
+DENO_GITHUB_ASSET_ID = "662551650"
+SUPABASE_GITHUB_ASSET_ID = "701653806"
 URLS = {
     "deno": (
-        "https://github.com/denoland/deno/releases/download/"
-        f"v{DENO_VERSION}/deno-x86_64-unknown-linux-gnu.zip"
+        "https://api.github.com/repos/denoland/deno/releases/assets/"
+        f"{DENO_GITHUB_ASSET_ID}"
     ),
     "supabase": (
-        "https://github.com/supabase/cli/releases/download/"
-        f"v{SUPABASE_VERSION}/supabase_{SUPABASE_VERSION}_linux_amd64.tar.gz"
+        "https://api.github.com/repos/supabase/cli/releases/assets/"
+        f"{SUPABASE_GITHUB_ASSET_ID}"
     ),
 }
 ERROR_BODY = "SYNTHETIC_UPSTREAM_BODY_MUST_NOT_APPEAR_IN_LOGS"
@@ -66,14 +69,16 @@ while i < len(args):
             i += 1
             value = args[i]
         values.setdefault(key, []).append(value)
-    elif arg in ("-o", "-w"):
+    elif arg in ("-o", "-w", "-H"):
         i += 1
-        key = {"-o": "--output", "-w": "--write-out"}[arg]
+        key = {"-o": "--output", "-w": "--write-out", "-H": "--header"}[arg]
         values.setdefault(key, []).append(args[i])
     elif arg.startswith("-o") and len(arg) > 2:
         values.setdefault("--output", []).append(arg[2:])
     elif arg.startswith("-w") and len(arg) > 2:
         values.setdefault("--write-out", []).append(arg[2:])
+    elif arg.startswith("-H") and len(arg) > 2:
+        values.setdefault("--header", []).append(arg[2:])
     elif arg.startswith("--"):
         flags.append(key)
     elif arg.startswith("-"):
@@ -106,6 +111,13 @@ if output and output != "-":
         payload = Path(known[url]).read_bytes()
     elif body == "partial":
         payload = Path(known[url]).read_bytes()[:23]
+    elif body == "json":
+        # A successful API metadata response is JSON, not the requested archive.
+        payload = json.dumps({
+            "id": int(url.rsplit("/", 1)[-1]),
+            "content_type": "application/octet-stream",
+            "message": "SYNTHETIC_UPSTREAM_BODY_MUST_NOT_APPEAR_IN_LOGS",
+        }).encode()
     else:
         payload = ("SYNTHETIC_UPSTREAM_BODY_MUST_NOT_APPEAR_IN_LOGS:" + body).encode()
     destination.write_bytes(payload)
@@ -218,8 +230,10 @@ class MiniRepository:
         }
         (tooling / "backend-versions.env").write_text(
             f"DENO_VERSION={DENO_VERSION}\n"
+            f"DENO_GITHUB_ASSET_ID={DENO_GITHUB_ASSET_ID}\n"
             f"DENO_LINUX_X64_SHA256={self.hashes['deno']}\n"
             f"SUPABASE_VERSION={SUPABASE_VERSION}\n"
+            f"SUPABASE_GITHUB_ASSET_ID={SUPABASE_GITHUB_ASSET_ID}\n"
             f"SUPABASE_LINUX_X64_SHA256={self.hashes['supabase']}\n"
         )
         self.pin_bytes = (tooling / "backend-versions.env").read_bytes()
@@ -358,8 +372,21 @@ class BackendBootstrapTests(unittest.TestCase):
                 self.assertEqual([float(v) for v in values.get("--connect-timeout", [])], [20])
                 self.assertEqual([float(v) for v in values.get("--max-time", [])], [180])
                 self.assertTrue(all(float(v) == 0 for v in values.get("--retry", [])), "No curl-internal retries")
+                headers = {}
+                for header in values.get("--header", []):
+                    name, separator, value = header.partition(":")
+                    self.assertEqual(separator, ":", "Headers must be explicit, not file-based")
+                    headers.setdefault(name.strip().lower(), []).append(value.strip())
+                self.assertEqual(headers.get("accept"), ["application/octet-stream"])
+                self.assertEqual(headers.get("x-github-api-version"), ["2022-11-28"])
+                self.assertNotIn("authorization", headers)
+                self.assertNotIn("proxy-authorization", headers)
+                self.assertNotIn("--location-trusted", flags)
+                for option in ("--user", "-u", "--oauth2-bearer", "--netrc", "--netrc-optional"):
+                    self.assertNotIn(option, flags, "Public assets must not require authentication")
                 self.assertNotIn("--insecure", flags)
                 self.assertNotIn("--proxy-insecure", flags)
+                self.assertNotIn("--doh-insecure", flags)
                 self.assertNotIn("-k", flags, "TLS verification must not be disabled")
                 self.assertTrue(any(
                     "%{http_code}" in value or "%{response_code}" in value
@@ -552,6 +579,29 @@ class BackendBootstrapTests(unittest.TestCase):
         self.assert_sentinels(sentinels)
         self.assert_no_extraction()
         self.assert_cache_only(set())
+
+    def test_http_200_api_json_fails_checksum_without_retry_cache_or_install(self):
+        for name in URLS:
+            for existing_binaries in (False, True):
+                with self.subTest(archive=name, existing_binaries=existing_binaries):
+                    fixture = self.new_fixture()
+                    sentinels = fixture.seed_installed() if existing_binaries else None
+                    fixture.configure(**{name: [response(0, "200", "json")]})
+                    result = self.invoke(fixture, success=False)
+                    self.assert_call_names(["deno"] if name == "deno" else ["deno", "supabase"], fixture)
+                    self.assertEqual(fixture.delays, [])
+                    self.assertIn("checksum", (result.stdout + result.stderr).lower())
+                    self.assertTrue(any(
+                        event["operation"] == "sha256sum:done" and event["exit"] != 0
+                        for event in fixture.events
+                    ), "HTTP 200 JSON must fail archive SHA-256 verification")
+                    self.assert_no_extraction(fixture)
+                    if existing_binaries:
+                        self.assert_sentinels(sentinels, fixture)
+                    else:
+                        self.assert_no_install(fixture)
+                    # The valid first archive may persist, but never the JSON body.
+                    self.assert_cache_only(set() if name == "deno" else {"deno"}, fixture)
 
     def test_partial_transport_failure_cleans_up_after_exhaustion(self):
         self.fixture.configure(deno=[response(18, "200", "partial")] * 3)
